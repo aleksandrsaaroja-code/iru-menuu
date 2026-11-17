@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="et">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f6b4f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Iru menüü</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232f6b4f'/%3E%3Ctext x='50' y='66' font-size='52' text-anchor='middle'%3E🍲%3C/text%3E%3C/svg%3E">
+<style>
+:root{--bg:#f4f1ea;--card:#fff;--ink:#23302a;--mute:#6b766f;--accent:#2f6b4f;--accent-ink:#fff;--line:#e3ded2;--chip:#eaf2ec;--warn:#9a5b00;--warn-bg:#fff3dc}
+@media (prefers-color-scheme:dark){:root{--bg:#141a17;--card:#1e2723;--ink:#e8eee9;--mute:#9aa8a0;--accent:#5fb589;--accent-ink:#0d1a13;--line:#2c3832;--chip:#25362d;--warn:#f0b968;--warn-bg:#3a2f1a}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:17px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:env(safe-area-inset-bottom)}
+header{position:sticky;top:0;z-index:5;background:var(--accent);color:var(--accent-ink);padding:calc(10px + env(safe-area-inset-top)) 16px 10px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+h1{font-size:18px;margin:0;font-weight:700}
+.sub{font-size:13px;opacity:.85}
+.nav{display:flex;gap:6px}
+.nav button{background:rgba(255,255,255,.18);color:inherit;border:0;border-radius:10px;min-width:44px;height:40px;font-size:18px;font-weight:600;padding:0 12px}
+.nav button:active{background:rgba(255,255,255,.32)}
+.days{display:flex;gap:6px;margin-top:10px;overflow-x:auto;scrollbar-width:none}
+.days::-webkit-scrollbar{display:none}
+.day{flex:1 0 auto;min-width:46px;border:0;border-radius:12px;padding:6px 4px;background:rgba(255,255,255,.14);color:inherit;text-align:center;font:inherit}
+.day b{display:block;font-size:14px}
+.day span{font-size:12px;opacity:.85}
+.day.sel{background:var(--card);color:var(--accent)}
+.day.today b::after{content:" •"}
+main{padding:14px 16px 28px;max-width:640px;margin:0 auto}
+h2.date{font-size:20px;margin:4px 0 12px}
+.meal{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:12px;overflow:hidden}
+.meal.now{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.meal h3{margin:0;padding:10px 14px;font-size:14px;letter-spacing:.04em;background:var(--chip);color:var(--accent);display:flex;justify-content:space-between}
+.meal h3 em{font-style:normal;opacity:.9}
+ul{list-style:none;margin:0;padding:4px 14px 8px}
+li{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+li:last-child{border-bottom:0}
+li .n{font-weight:600;overflow-wrap:anywhere}
+li .q{color:var(--mute);white-space:nowrap;font-variant-numeric:tabular-nums;font-size:15px}
+li.bread .n{font-weight:400;color:var(--mute)}
+li.var .n{font-weight:500}
+.tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;border-radius:6px;padding:1px 6px;margin-right:6px;background:var(--warn-bg);color:var(--warn);vertical-align:1px}
+.notes{font-size:13px;color:var(--mute);margin-top:16px}
+.notes p{margin:4px 0}
+.empty{text-align:center;color:var(--mute);padding:40px 0}
+.wk{font-size:13px;opacity:.9}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <div><h1>Iru Hooldekodu menüü</h1><div class="sub" id="sub"></div></div>
+    <div class="nav"><button id="prev" aria-label="Eelmine nädal">‹</button><button id="today" aria-label="Täna">Täna</button><button id="next" aria-label="Järgmine nädal">›</button></div>
+  </div>
+  <div class="days" id="days" role="tablist"></div>
+</header>
+<main id="main"></main>
+<script>
+let DATA=null;
+const DAYS=["Esmaspäev","Teisipäev","Kolmapäev","Neljapäev","Reede","Laupäev","Pühapäev"];
+const SHORT=["E","T","K","N","R","L","P"];
+const MONTHS=["jaanuar","veebruar","märts","aprill","mai","juuni","juuli","august","september","oktoober","november","detsember"];
+// Tsükkel: nädal alates 05.10.2026 = Nädal 2
+const ANCHOR=Date.UTC(2026,9,5);
+const mondayOf=d=>{const x=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));x.setUTCDate(x.getUTCDate()-((x.getUTCDay()+6)%7));return x};
+const weekNo=m=>{const w=Math.round((m-ANCHOR)/(7*864e5));return (((1+w)%5)+5)%5+1};
+const fmt=d=>d.getUTCDate()+"."+String(d.getUTCMonth()+1).padStart(2,"0")+"."+d.getUTCFullYear();
+const now=new Date();
+const todayUTC=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());
+let monday=mondayOf(now), sel=(now.getDay()+6)%7;
+const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+function mealRange(t){const m=t.match(/(\d+)\.(\d+)\s*$/);return m?(+m[1])*60+(+m[2]):null}
+function render(){
+  if(!DATA)return;
+  const wn=weekNo(monday), day=DATA[wn][sel];
+  const dt=new Date(monday.getTime()+sel*864e5);
+  const isToday=dt.getTime()===todayUTC;
+  document.getElementById("sub").textContent="Nädal "+wn+" · "+fmt(monday)+" –"+(window.UPD?" · uuendatud "+window.UPD:"");
+  document.getElementById("days").innerHTML=DAYS.map((n,i)=>{
+    const d=new Date(monday.getTime()+i*864e5);
+    return `<button class="day${i===sel?" sel":""}${d.getTime()===todayUTC?" today":""}" data-i="${i}" role="tab"><b>${SHORT[i]}</b><span>${d.getUTCDate()}.${d.getUTCMonth()+1}</span></button>`}).join("");
+  const mins=now.getHours()*60+now.getMinutes();
+  const times=day.s.map(s=>mealRange(s.t));
+  let cur=-1; if(isToday){times.forEach((t,i)=>{if(t!==null&&t-30<=mins)cur=i})}
+  let h=`<h2 class="date">${DAYS[sel]}, ${dt.getUTCDate()}. ${MONTHS[dt.getUTCMonth()]}</h2>`;
+  if(!day.s.length)h+=`<div class="empty">Menüü puudub</div>`;
+  day.s.forEach((s,i)=>{
+    const [name,time]=s.t.split(/\s+KELL\s+/);
+    h+=`<section class="meal${i===cur?" now":""}"><h3><span>${esc(name)}</span><em>${time?"kl "+esc(time.replace(".",":")):""}</em></h3><ul>`;
+    s.i.forEach(([n,q])=>{
+      const v=n.match(/^(DIABEET|PEENESTATUD):\s*(.*)$/);
+      const bread=/^LEIB, SAI/.test(n);
+      h+=`<li class="${v?"var":""}${bread?" bread":""}"><span class="n">${v?`<span class="tag">${v[1]}</span>${esc(v[2])}`:esc(n)}</span><span class="q">${esc(q)}</span></li>`});
+    h+=`</ul></section>`});
+  if(day.n&&day.n.length)h+=`<div class="notes">${day.n.map(x=>`<p>${esc(x)}</p>`).join("")}</div>`;
+  document.getElementById("main").innerHTML=h;
+}
+document.getElementById("days").addEventListener("click",e=>{const b=e.target.closest(".day");if(b){sel=+b.dataset.i;render();scrollTo(0,0)}});
+document.getElementById("prev").onclick=()=>{monday=new Date(monday.getTime()-7*864e5);render()};
+document.getElementById("next").onclick=()=>{monday=new Date(monday.getTime()+7*864e5);render()};
+document.getElementById("today").onclick=()=>{monday=mondayOf(new Date());sel=(new Date().getDay()+6)%7;render()};
+let sx=0;
+document.addEventListener("touchstart",e=>{sx=e.touches[0].clientX},{passive:true});
+document.addEventListener("touchend",e=>{const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)<70)return;
+  if(dx<0){if(sel<6)sel++;else{sel=0;monday=new Date(monday.getTime()+7*864e5)}}
+  else{if(sel>0)sel--;else{sel=6;monday=new Date(monday.getTime()-7*864e5)}}
+  render()},{passive:true});
+const sub0=document.getElementById("sub");
+fetch("menu.json",{cache:"no-store"}).then(r=>r.json()).then(j=>{DATA=j.weeks;window.UPD=j.updated;render()}).catch(()=>{document.getElementById("main").innerHTML='<div class="empty">Menüü laadimine ebaõnnestus. Ava äpp võrgus vähemalt üks kord.</div>'});
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
