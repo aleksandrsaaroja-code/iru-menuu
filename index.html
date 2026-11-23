@@ -188,7 +188,9 @@ function qView(day){
   if(DEPINFO)h+=`<div class="notes" style="margin:0 0 10px"><p>Arvud toidulehelt, uuendatud ${esc(DEPINFO.updated)}</p></div>`;
   day.s.forEach(s=>{
     const lunch=/^LÕUNA/i.test(s.t);
-    h+=`<section class="meal"><h3><span>${esc(s.t.split(/\s+KELL\s+/)[0])}</span><em>${esc((s.t.split(/\s+KELL\s+/)[1]||"").replace(".",":"))}</em></h3><ul style="padding-top:0">`;
+    const puN=DX.filter(x=>/^Puhvet/i.test(x.n)).reduce((a,x)=>a+x.t,0), clN=DX.reduce((a,x)=>a+x.t,0)-puN;
+    const cl=/^(HOMMIKU|LÕUNA|ÕHTU)/i.test(s.t)?(lunch&&puN?`${clN} + ${puN} = ${clN+puN}`:`${clN}`)+" klienti":"";
+    h+=`<section class="meal"><h3><span>${esc(s.t.split(/\s+KELL\s+/)[0])}${cl?` <span style="font-weight:600;opacity:.85;letter-spacing:0">· ${cl}</span>`:""}</span><em>${esc((s.t.split(/\s+KELL\s+/)[1]||"").replace(".",":"))}</em></h3><ul style="padding-top:0">`;
     s.i.forEach(([n,q])=>{
       const v=n.match(/^(DIABEET|PEENESTATUD):\s*(.*)$/);
       if(/^LEIB, SAI/.test(n))return;
