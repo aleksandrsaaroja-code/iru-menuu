@@ -57,6 +57,7 @@ li.var .n{font-weight:500}
   <div class="days" id="days" role="tablist"></div>
 </header>
 <div id="inst" style="display:none;margin:8px 12px;padding:10px 12px;border-radius:12px;background:#2f6b4f;color:#fff;font:15px system-ui;text-align:center"></div>
+<nav id="nav" style="display:flex;gap:6px;margin:8px 12px"></nav>
 <main id="main"></main>
 <script>
 let DATA=null;
@@ -96,6 +97,9 @@ function render(){
       h+=`<li class="${v?"var":""}${bread?" bread":""}"><span class="n">${v?`<span class="tag">${v[1]}</span>${esc(v[2])}`:esc(n)}</span><span class="q">${esc(q)}</span></li>`});
     h+=`</ul></section>`});
   if(day.n&&day.n.length)h+=`<div class="notes">${day.n.map(x=>`<p>${esc(x)}</p>`).join("")}</div>`;
+  if(VIEW==="q")h=`<h2 class="date">${DAYS[sel]}, ${dt.getUTCDate()}. ${MONTHS[dt.getUTCMonth()]}</h2>`+qView(day);
+  if(VIEW==="s")h=sView();
+  document.getElementById("nav").innerHTML=[["m","Menüü"],["q","Kogused"],["s","Seaded"]].map(([k,n])=>`<button data-v="${k}" style="flex:1;padding:9px;border-radius:10px;border:1px solid #2f6b4f;font:600 15px system-ui;background:${VIEW===k?"#2f6b4f":"#fff"};color:${VIEW===k?"#fff":"#2f6b4f"}">${n}</button>`).join("");
   document.getElementById("main").innerHTML=h;
 }
 document.getElementById("days").addEventListener("click",e=>{const b=e.target.closest(".day");if(b){sel=+b.dataset.i;render();scrollTo(0,0)}});
@@ -119,6 +123,55 @@ addEventListener("beforeinstallprompt",e=>{e.preventDefault();dp=e;b.style.displ
 addEventListener("appinstalled",()=>{b.style.display="none"});
 if(/iphone|ipad|ipod/i.test(navigator.userAgent)){b.style.display="block";b.innerHTML='📲 Paigaldamiseks: puuduta <b>Jaga</b> (ruut noolega) → <b>Lisa avaekraanile</b>'}
 })();
+
+// ---- Kogused ----
+let VIEW="m";
+const LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
+const SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+let DEPS=LS("iru_deps",[]);      // [{n,t,p,m}]  nimi, kliente, peenestatud, piimavaba
+let OVR=LS("iru_ovr",{});        // toidu kaalu muudatused
+const num=v=>Math.max(0,parseInt(v)||0);
+const fmtQ=(v,u)=>{const l=u==="g"?"kg":u==="ml"?"l":null;
+  if(l&&v>=1000)return (v/1000).toLocaleString("et",{maximumFractionDigits:2})+" "+l;
+  return Math.round(v).toLocaleString("et")+" "+u};
+const LIQ=/MAHL|MORSS|KOHV|TEE\b|PIIM|KISSEL|JOOK|KAKAO|KEFIIR|SUPP|PUUL/;
+function qView(day){
+  if(!DEPS.length)return '<div class="empty">Lisa kõigepealt osakonnad: vajuta „Seaded“.</div>';
+  const T=DEPS.reduce((a,d)=>({t:a.t+d.t,p:a.p+d.p,m:a.m+d.m}),{t:0,p:0,m:0});
+  let h=`<div class="notes"><p><b>Kliente kokku ${T.t}</b> · peenestatud ${T.p} · piimavaba ${T.m}</p>`+
+    DEPS.map(d=>`<p>${esc(d.n)}: ${d.t} (peenestatud ${d.p}, piimavaba ${d.m})</p>`).join("")+`</div>`;
+  day.s.forEach((s,si)=>{
+    h+=`<section class="meal"><h3><span>${esc(s.t.split(/\s+KELL\s+/)[0])}</span></h3><ul>`;
+    s.i.forEach(([n,q],ii)=>{
+      const v=n.match(/^(DIABEET|PEENESTATUD):\s*(.*)$/);
+      if(/^LEIB, SAI/.test(n)||v&&v[1]==="DIABEET"){h+=`<li><span class="n">${esc(n)}</span><span class="q">${esc(q)}</span></li>`;return}
+      const pure=v&&v[1]==="PEENESTATUD", name=v?v[2]:n;
+      const names=name.split(/\s*,\s*/), qs=q.split("/");
+      const parts=(names.length===qs.length&&qs.length>1)?names.map((x,k)=>[x,qs[k]]):[[name,qs[0]]];
+      parts.forEach(([nm,qq],k)=>{
+        const key=n+"|"+k, raw=(OVR[key]!==undefined?OVR[key]:qq).toString().trim();
+        const pc=/TK/i.test(raw), val=parseFloat(raw)||0, unit=pc?"tk":LIQ.test(nm)?"ml":"g";
+        const deps=DEPS.map(d=>[d.n,pure?d.p:d.t-d.p]);
+        const tot=deps.reduce((a,x)=>a+x[1],0)*val;
+        h+=`<li><span class="n">${pure?'<span class="tag">PEENESTATUD</span>':""}${esc(nm)}<br><small style="opacity:.75">${deps.filter(x=>x[1]).map(x=>esc(x[0])+" "+fmtQ(x[1]*val,unit)).join(" · ")}</small></span>`+
+          `<span class="q" style="text-align:right"><input data-k="${esc(key)}" value="${esc(raw)}" inputmode="decimal" style="width:64px;text-align:right;padding:4px;border:1px solid #bbb;border-radius:8px"> ${pc?"":unit}<br><b>${val?fmtQ(tot,unit):"–"}</b></span></li>`});
+    });
+    h+=`</ul></section>`});
+  return h+'<div class="notes"><p>Kogus = portsjonite arv × kaal. Kaalu saad lahtrisse muuta, nt 150 või 3TK. Tavaportsjoneid = kliendid miinus peenestatud.</p></div>'}
+function sView(){
+  const inp=(i,f,v)=>`<input data-d="${i}" data-f="${f}" value="${v}" inputmode="numeric" style="width:100%;padding:8px;border:1px solid #bbb;border-radius:8px">`;
+  return `<section class="meal"><h3><span>Osakonnad</span></h3><div style="padding:8px">`+
+   (DEPS.length?`<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 28px;gap:6px;font-size:12px;opacity:.7"><span>Nimi</span><span>Kliente</span><span>Peenest.</span><span>Piimav.</span><span></span></div>`:"")+
+   DEPS.map((d,i)=>`<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 28px;gap:6px;margin:6px 0"><input data-d="${i}" data-f="n" value="${esc(d.n)}" style="padding:8px;border:1px solid #bbb;border-radius:8px">${inp(i,"t",d.t)}${inp(i,"p",d.p)}${inp(i,"m",d.m)}<button data-del="${i}" style="border:0;background:none;font-size:18px">✕</button></div>`).join("")+
+   `<button id="addd" style="margin-top:8px;padding:10px;width:100%;border-radius:10px;border:1px dashed #2f6b4f;background:#fff;color:#2f6b4f;font:600 15px system-ui">+ Lisa osakond</button>`+
+   `<p style="font-size:13px;opacity:.7">Andmed salvestuvad ainult selles telefonis.</p></div></section>`}
+document.addEventListener("click",e=>{
+  const v=e.target.closest("[data-v]");if(v){VIEW=v.dataset.v;render();scrollTo(0,0);return}
+  if(e.target.id==="addd"){DEPS.push({n:"Osakond "+(DEPS.length+1),t:0,p:0,m:0});SV("iru_deps",DEPS);render();return}
+  const x=e.target.closest("[data-del]");if(x&&confirm("Kustutan osakonna?")){DEPS.splice(+x.dataset.del,1);SV("iru_deps",DEPS);render()}});
+document.addEventListener("change",e=>{const t=e.target;
+  if(t.dataset.d!==undefined){const d=DEPS[+t.dataset.d],f=t.dataset.f;d[f]=f==="n"?t.value:num(t.value);SV("iru_deps",DEPS)}
+  if(t.dataset.k!==undefined){OVR[t.dataset.k]=t.value.trim();SV("iru_ovr",OVR);render()}});
 </script>
 </body>
 </html>
