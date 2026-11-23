@@ -31,8 +31,9 @@ for u in UNITS:
     dates[u.replace("-", "/")] = v.strftime("%Y-%m-%d") if hasattr(v, "strftime") else None
 deps.append({"n": "Söökla", "t": sookla, "p": 0, "m": 0, "d": 0})
 puh = OLD.get("puhvet", 70)
-deps.append({"n": "Puhvet (E–R)", "t": puh, "p": 0, "m": 0, "d": 0})
-res = {"updated": datetime.datetime.now().strftime("%d.%m.%Y %H:%M"), "puhvet": puh, "dates": dates, "deps": deps}
+puh_w = OLD.get("puhvet_w", 50)   # puhvet laupäeval ja pühapäeval
+deps.append({"n": "Puhvet", "t": puh, "w": puh_w, "p": 0, "m": 0, "d": 0})
+res = {"updated": datetime.datetime.now().strftime("%d.%m.%Y %H:%M"), "puhvet": puh, "puhvet_w": puh_w, "dates": dates, "deps": deps}
 out.write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
 print("Kirjutatud", out, "· sööjaid kokku", sum(d["t"] for d in deps))
 for w in warn: print("HOIATUS:", w)
