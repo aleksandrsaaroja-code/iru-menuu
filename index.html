@@ -189,7 +189,7 @@ function qView(day){
   day.s.forEach(s=>{
     const lunch=/^LÕUNA/i.test(s.t);
     const puN=DX.filter(x=>/^Puhvet/i.test(x.n)).reduce((a,x)=>a+x.t,0), clN=DX.reduce((a,x)=>a+x.t,0)-puN;
-    const cl=/^(HOMMIKU|LÕUNA|ÕHTU)/i.test(s.t)?(lunch&&puN?`${clN} + ${puN} = ${clN+puN}`:`${clN}`)+" klienti":"";
+    const cl=/^(HOMMIKU|LÕUNA|ÕHTU|ÖÖ)/i.test(s.t)?(lunch&&puN?`${clN} + ${puN} = ${clN+puN}`:`${clN}`)+" klienti":"";
     h+=`<section class="meal"><h3><span>${esc(s.t.split(/\s+KELL\s+/)[0])}${cl?` <span style="font-weight:600;opacity:.85;letter-spacing:0">· ${cl}</span>`:""}</span><em>${esc((s.t.split(/\s+KELL\s+/)[1]||"").replace(".",":"))}</em></h3><ul style="padding-top:0">`;
     s.i.forEach(([n,q])=>{
       const v=n.match(/^(DIABEET|PEENESTATUD):\s*(.*)$/);
@@ -201,7 +201,7 @@ function qView(day){
         const key=n+"|"+k, raw=(OVR[key]!==undefined?OVR[key]:qq).toString().trim();
         const pc=/TK/i.test(raw), val=parseFloat(raw)||0, unit=pc?"tk":LIQ.test(nm)?"ml":"g";
         const noPur=/^(SALAT|SAIAKE)/i.test(nm);   // peenestatud ei söö salatit ega saiakest (tükikaup)
-        const noSplit=(/KASTE|KETŠUP|HAPUKOOR|^HK\s*$/i.test(nm)&&[20,30,50].includes(val)&&unit==="g")||/KISSELL|(PUDER|HELBED)\s*$|^KAKAO\s*$|^MAISIMANNA\s*$|^(MOOS|TOORMOOS|MEREVAIK|KOHV|TEE|PIIM|KEEFIR|MAHL|MORSS)\s*$/i.test(nm);   // kastmel peenestatud eraldi ei näidata, läheb kokku
+        const noSplit=(/KASTE|KETŠUP|HAPUKOOR|^HK\s*$/i.test(nm)&&[20,30,50].includes(val)&&unit==="g")||/KISSELL|PASTEET|(PUDER|HELBED)\s*$|^KAKAO\s*$|^MAISIMANNA\s*$|^(MOOS|TOORMOOS|MEREVAIK|KOHV|TEE|PIIM|KEEFIR|MAHL|MORSS)\s*$/i.test(nm);   // kastmel peenestatud eraldi ei näidata, läheb kokku
         const deps=DX.filter(d=>lunch||!/^Puhvet/i.test(d.n)).map(d=>[d.n,pure?d.p:dia?d.d:(noPur?d.t-d.p:d.t)]);
         const isPu=nn=>/^Puhvet/i.test(nn);
         const pRaw=OVR[key+"|pu"]!==undefined?OVR[key+"|pu"]:(/^SALAT/i.test(nm)?"100":raw), pv=parseFloat(pRaw)||0;
