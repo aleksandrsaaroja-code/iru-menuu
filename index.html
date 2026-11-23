@@ -140,7 +140,7 @@ const LIQ=/MAHL|MORSS|KOHV|TEE\b|PIIM|KISSEL|JOOK|KAKAO|KEFIIR|SUPP|PUUL/;
 function qView(day){
   if(!DEPS.length)return '<div class="empty">Lisa kõigepealt osakonnad: vajuta „Seaded“.</div>';
   const T=DEPS.reduce((a,d)=>({t:a.t+d.t,p:a.p+d.p,m:a.m+d.m,d:a.d+d.d}),{t:0,p:0,m:0,d:0});
-  let h=`<div class="notes"><p><b>Sööjaid kokku ${T.t}</b> · peenestatud ${T.p} · piimavaba ${T.m} · suhkruvaba ${T.d}</p>`+
+  let h=(DEPINFO?`<div class="notes"><p>Arvud toidulehelt, uuendatud ${esc(DEPINFO.updated)}</p></div>`:"")+`<div class="notes"><p><b>Sööjaid kokku ${T.t}</b> · peenestatud ${T.p} · piimavaba ${T.m} · suhkruvaba ${T.d}</p>`+
     DEPS.map(d=>`<p>${esc(d.n)}: ${d.t} (peenestatud ${d.p}, piimavaba ${d.m}, suhkruvaba ${d.d})</p>`).join("")+`</div>`;
   day.s.forEach((s,si)=>{
     h+=`<section class="meal"><h3><span>${esc(s.t.split(/\s+KELL\s+/)[0])}</span></h3><ul>`;
@@ -167,7 +167,15 @@ function sView(){
    (DEPS.length?`<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 28px;gap:6px;font-size:12px;opacity:.7"><span>Üksus</span><span>Sööjaid</span><span>Peenest.</span><span>Piimav.</span><span>Suhkruv.</span><span></span></div>`:"")+
    DEPS.map((d,i)=>`<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 28px;gap:6px;margin:6px 0"><input data-d="${i}" data-f="n" value="${esc(d.n)}" style="padding:8px;border:1px solid #bbb;border-radius:8px">${inp(i,"t",d.t)}${inp(i,"p",d.p)}${inp(i,"m",d.m)}${inp(i,"d",d.d)}<button data-del="${i}" style="border:0;background:none;font-size:18px">✕</button></div>`).join("")+
    `<button id="addd" style="margin-top:8px;padding:10px;width:100%;border-radius:10px;border:1px dashed #2f6b4f;background:#fff;color:#2f6b4f;font:600 15px system-ui">+ Lisa üksus</button>`+
-   `<p style="font-size:13px;opacity:.7">Andmed (13.11.2026 toidulehelt) salvestuvad ainult selles telefonis. Märkused: 3D 5×päevas piimavaba, riisivaba, suhkruvaba, 1 keedumuna; 3B iga päev 500 g tatart; 4A/2 päevahoid E–R on üldtoidu sees; 2D ja 4A/1 piimavaba ka laktoosivaba.</p></div></section>`}
+   (DEPINFO?`<p style="font-size:13px">Arvud toidulehelt, uuendatud <b>${esc(DEPINFO.updated)}</b>. Uuenevad ise, kui fail muutub. Käsitsi muudatused kehtivad kuni järgmise uuenduseni.</p>`+Object.entries(DEPINFO.dates||{}).filter(([k,v])=>v&&(Date.now()-Date.parse(v))>7*864e5).map(([k,v])=>`<p style="font-size:13px;color:#b45309">⚠ ${esc(k)} toidulehe kuupäev ${esc(v)} on üle 7 päeva vana</p>`).join(""):"")+`<p style="font-size:13px;opacity:.7">Andmed (toidulehelt) salvestuvad ainult selles telefonis. Märkused: 3D 5×päevas piimavaba, riisivaba, suhkruvaba, 1 keedumuna; 3B iga päev 500 g tatart; 4A/2 päevahoid E–R on üldtoidu sees; 2D ja 4A/1 piimavaba ka laktoosivaba.</p></div></section>`}
+
+// ---- Arvud toidulehelt (osakonnad.json uueneb automaatselt) ----
+let DEPINFO=null;
+fetch("osakonnad.json",{cache:"no-store"}).then(r=>r.json()).then(j=>{
+  DEPINFO=j;
+  const base=LS0("iru_deps_base","");
+  if(base!==j.updated){DEPS=j.deps.map(x=>({d:0,...x}));SV("iru_deps",DEPS);try{localStorage.setItem("iru_deps_base",j.updated)}catch(e){}}
+  render()}).catch(()=>{});
 document.addEventListener("click",e=>{
   const v=e.target.closest("[data-v]");if(v){VIEW=v.dataset.v;try{localStorage.setItem("iru_view",VIEW)}catch(_){}render();scrollTo(0,0);return}
   if(e.target.id==="addd"){DEPS.push({n:"Üksus "+(DEPS.length+1),t:0,p:0,m:0,d:0});SV("iru_deps",DEPS);render();return}
