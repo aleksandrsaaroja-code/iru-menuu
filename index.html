@@ -201,7 +201,7 @@ function qView(day){
         const key=n+"|"+k, raw=(OVR[key]!==undefined?OVR[key]:qq).toString().trim();
         const pc=/TK/i.test(raw), val=parseFloat(raw)||0, unit=pc?"tk":LIQ.test(nm)?"ml":"g";
         const noPur=/^(SALAT|SAIAKE)/i.test(nm);   // peenestatud ei söö salatit ega saiakest (tükikaup)
-        const dairy=!pure&&!dia&&/(PUDER|HELBED)\s*$|^MAISIMANNA|PIIM|KEEFIR|JOGURT|JUUST(?!UPASTEET)|KAKAO|KOHUKE|HAPUKOOR|^HK\s*$|FRIKADELLIKASTE|KARAMELLKISSELL/i.test(nm);   // piimavaba rida: pudrud ja piimatooted
+        const dairy=!pure&&!dia&&/(PUDER|HELBED)\s*$|^MAISIMANNA|PIIM|KEEFIR|JOGURT|KAKAO|KOHUKE|HAPUKOOR|^HK\s*$|FRIKADELLIKASTE|KARAMELLKISSELL/i.test(nm);   // piimavaba rida: pudrud ja piimatooted
         const MV=DX.filter(d=>!/^Puhvet/i.test(d.n)).reduce((a,d)=>a+d.m,0);
         const ml=(x,f)=>{const u=DX.find(d=>d.n===x[0]);return dairy&&u&&u.m?`<div class="ln" style="color:var(--warn)"><span>piimavaba <span>(${u.m})</span></span><b>→ ${f(u.m)}</b></div>`:""};
         const noSplit=(/KASTE|KETŠUP|HAPUKOOR|^HK\s*$/i.test(nm)&&[20,30,50].includes(val)&&unit==="g")||/KISSELL|PASTEET|KOHUPIIM\s*$|^VÕI\s*$|(PUDER|HELBED)\s*$|^KAKAO\s*$|^MAISIMANNA\s*$|^(MOOS|TOORMOOS|MEREVAIK|KOHV|TEE|PIIM|KEEFIR|MAHL|MORSS)\s*$/i.test(nm);   // kastmel peenestatud eraldi ei näidata, läheb kokku
