@@ -22,10 +22,11 @@ for u in UNITS:
     db = sum(g(r, c) for r in (6, 7) for c in "CE")
     pv = sum(g(r, c) for r in (6, 7, 8) for c in "DE") + g(8, "C") * 0
     pv = sum(g(r, c) for r in (6, 7, 8) for c in "DE")
+    mv = sum(g(r, c) for r in (6, 7) for c in "DE")   # piimavaba, mitte-peenestatud
     osk, sk = g(20, "B"), g(21, "B")
     if sum(g(r, c) for r in (6, 7, 8) for c in "BCDE") != osk:
         warn.append(f"{u}: tabeli summa ei võrdu 'Osakonnas sööb' ({osk})")
-    deps.append({"n": u.replace("-", "/"), "t": osk, "p": pur, "m": pv, "d": db, "h": g(25, "B")})
+    deps.append({"n": u.replace("-", "/"), "t": osk, "p": pur, "m": pv, "mv": mv, "d": db, "h": g(25, "B")})
     sookla += sk
     v = ws["E2"].value
     dates[u.replace("-", "/")] = v.strftime("%Y-%m-%d") if hasattr(v, "strftime") else None
