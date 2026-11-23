@@ -1,0 +1,6 @@
+Arvude automaatne uuendus toidulehelt
+1. Arvutisse (mis näeb X-ketast): Python + "pip install openpyxl" + git (repo kloonitud).
+2. Käsitsi: python tools\uuenda_arvud.py "X:\Statistika\Toidulehed_2026 UUS.xlsx" --push
+3. Automaatselt: Windowsi Task Scheduler, nt iga 30 min, sama käsk.
+Äpp võtab osakonnad.json uue versiooni ise. Ainult arvud, nimesid ei võeta.
+Puhveti arv on osakonnad.json väljal "puhvet".
