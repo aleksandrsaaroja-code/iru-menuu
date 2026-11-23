@@ -125,6 +125,7 @@ function render(){
     h+=`</ul></section>`});
   if(day.n&&day.n.length)h+=`<div class="notes">${day.n.map(x=>`<p>${esc(x)}</p>`).join("")}</div>`;
   if(VIEW==="q")h=`<h2 class="date">${DAYS[sel]}, ${dt.getUTCDate()}. ${MONTHS[dt.getUTCMonth()]}</h2>`+qView(day);
+  if(VIEW==="s"&&!UNL)VIEW="q";
   if(VIEW==="s")h=sView();
   document.getElementById("nav").innerHTML=[["q","Kogused"],["m","Menüü"],["s","Seaded"]].map(([k,n])=>`<button data-v="${k}" class="${VIEW===k?"on":""}">${n}</button>`).join("");
   document.getElementById("main").innerHTML=h;
@@ -153,6 +154,10 @@ if(/iphone|ipad|ipod/i.test(navigator.userAgent)){b.style.display="block";b.inne
 
 // ---- Kogused ----
 function LS0(k,d){try{return localStorage.getItem(k)||d}catch(e){return d}}
+let UNL=false;   // Seaded ja portsjonite muutmine avatakse PIN-iga
+const PINH="d3d35c902665390ceb1addf0d15082f1f22112ae21c5740d8085025875b04c13";
+async function sha(t){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+async function askPin(){const v=prompt("Sisesta PIN");if(v===null)return false;let ok=false;try{ok=(await sha("iru"+v.trim()))===PINH}catch(e){}if(!ok){alert("Vale PIN");return false}UNL=true;return true}
 let VIEW=LS0("iru_view","q");
 const LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
@@ -219,8 +224,8 @@ function qView(day){
         const calc=puC&&pv!==val&&!pure&&!dia?val+" "+unit+" × "+regC+" + "+pv+" "+unit+" × "+puC:val+" "+unit+" × "+cnt;
         const tag=pure?'<span class="tag pur">PEENESTATUD</span>':dia?'<span class="tag">DIABEET</span>':"";
         h+=`<li class="qrow" style="display:block" data-nm="${esc(nm)}" data-raw="${esc(raw)}" data-unit="${unit}" data-flags="${[noSplit&&"NS",noPur&&"NP",dairy&&"DY",pure&&"PU",dia&&"DB"].filter(Boolean).join(" ")}"><details><summary><div class="qn">${tag}${esc(nm)}<small>${val?calc+" = "+fmtQ(tot,unit)+(pure||dia?"":sub(val,unit,lunch,pv,noPur||noSplit,PW))+(dairy&&MV?`<br><span style="color:var(--warn)">sh piimavaba: ${MV} × ${val} ${unit} = ${fmtQ(MV*val,unit)}</span>`:""):"kogus puudub"}</small></div><div class="qt">${val?fmtQ(tot,unit):"–"}</div></summary>`+
-          `<div class="qd"><label>Portsjon <input data-k="${esc(key)}" value="${esc(raw)}" inputmode="decimal"> ${unit}</label>`+
-          (puC?`<label>Puhveti portsjon <input data-k="${esc(key+"|pu")}" value="${esc(pRaw)}" inputmode="decimal"> ${unit}</label>`:"")+
+          `<div class="qd"><label>Portsjon <input data-k="${esc(key)}" ${UNL?"":"readonly"} value="${esc(raw)}" inputmode="decimal"> ${unit}</label>`+
+          (puC?`<label>Puhveti portsjon <input data-k="${esc(key+"|pu")}" ${UNL?"":"readonly"} value="${esc(pRaw)}" inputmode="decimal"> ${unit}</label>`:"")+
           deps.filter(x=>x[1]).map(x=>{const u=DX.find(d=>d.n===x[0])||{}, own=!(pure||dia||isPu(x[0]));
             const pp=(own&&!noPur&&!noSplit)?(u.p||0):0, pm=(own&&dairy)?mvOf(u):0, main=x[1]-pp-pm, w=wt(x[0]), f=n=>val?(unit==="g"?(n*w/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg":fmtQ(n*w,unit)):"–";
             if(!pp&&!pm)return `<div class="ln"><span>${esc(x[0])} <span style="color:var(--mute)">(${x[1]})</span></span><b>${f(x[1])}</b></div>`;
@@ -246,10 +251,10 @@ fetch("osakonnad.json",{cache:"no-store"}).then(r=>r.json()).then(j=>{
   if(base!==j.updated){DEPS=j.deps.map(x=>({d:0,...x}));SV("iru_deps",DEPS);try{localStorage.setItem("iru_deps_base",j.updated)}catch(e){}}
   render()}).catch(()=>{});
 document.addEventListener("click",e=>{
-  const v=e.target.closest("[data-v]");if(v){VIEW=v.dataset.v;try{localStorage.setItem("iru_view",VIEW)}catch(_){}render();scrollTo(0,0);return}
+  const v=e.target.closest("[data-v]");if(v){if(v.dataset.v==="s"&&!UNL){askPin().then(ok=>{if(ok){VIEW="s";render();scrollTo(0,0)}});return}VIEW=v.dataset.v;try{localStorage.setItem("iru_view",VIEW)}catch(_){}render();scrollTo(0,0);return}
   if(e.target.id==="addd"){DEPS.push({n:"Üksus "+(DEPS.length+1),t:0,p:0,m:0,d:0});SV("iru_deps",DEPS);render();return}
   const x=e.target.closest("[data-del]");if(x&&confirm("Kustutan osakonna?")){DEPS.splice(+x.dataset.del,1);SV("iru_deps",DEPS);render()}});
-document.addEventListener("change",e=>{const t=e.target;
+document.addEventListener("change",e=>{const t=e.target;if(!UNL)return;
   if(t.dataset.d!==undefined){const d=DEPS[+t.dataset.d],f=t.dataset.f;d[f]=f==="n"?t.value:num(t.value);SV("iru_deps",DEPS)}
   if(t.dataset.k!==undefined){OVR[t.dataset.k]=t.value.trim();SV("iru_ovr",OVR);render()}});
 </script>
