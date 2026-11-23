@@ -164,6 +164,12 @@ const fmtQ=(v,u)=>{const l=u==="g"?"kg":u==="ml"?"l":null;
   if(l&&v>=1000)return (v/1000).toLocaleString("et",{maximumFractionDigits:2})+" "+l;
   return Math.round(v).toLocaleString("et")+" "+u};
 const LIQ=/MAHL|MORSS|KOHV|TEE\b|PIIM|KISSEL|JOOK|KAKAO|KEFIIR|SUPP|PUUL/;
+function sub(val,unit,lunch){
+  const pe=DEPS.reduce((a,d)=>a+(/^Puhvet/i.test(d.n)?0:d.p),0), pu=lunch?DEPS.filter(d=>/^Puhvet/i.test(d.n)).reduce((a,d)=>a+d.t,0):0;
+  let r="";
+  if(pe)r+=`<br>sh peenestatud: ${pe} × ${val} ${unit} = ${fmtQ(pe*val,unit)}`;
+  if(pu)r+=`<br>sh puhvet: ${pu} × ${val} ${unit} = ${fmtQ(pu*val,unit)}`;
+  return r}
 function qView(day){
   if(!DEPS.length)return '<div class="empty">Lisa kõigepealt üksused: vajuta „Seaded“.</div>';
   const T=DEPS.reduce((a,d)=>({t:a.t+d.t,p:a.p+d.p,m:a.m+d.m,d:a.d+d.d}),{t:0,p:0,m:0,d:0});
@@ -189,7 +195,7 @@ function qView(day){
         const deps=DEPS.filter(d=>lunch||!/^Puhvet/i.test(d.n)).map(d=>[d.n,pure?d.p:dia?d.d:d.t-d.d]);
         const cnt=deps.reduce((a,x)=>a+x[1],0), tot=cnt*val;
         const tag=pure?'<span class="tag pur">PEENESTATUD</span>':dia?'<span class="tag">DIABEET</span>':"";
-        h+=`<li class="qrow" style="display:block"><details><summary><div class="qn">${tag}${esc(nm)}<small>${val?val+" "+unit+" × "+cnt+" sööjat":"kogus puudub"}</small></div><div class="qt">${val?fmtQ(tot,unit):"–"}</div></summary>`+
+        h+=`<li class="qrow" style="display:block"><details><summary><div class="qn">${tag}${esc(nm)}<small>${val?val+" "+unit+" × "+cnt+" = "+fmtQ(tot,unit)+(pure||dia?"":sub(val,unit,lunch)):"kogus puudub"}</small></div><div class="qt">${val?fmtQ(tot,unit):"–"}</div></summary>`+
           `<div class="qd"><label>Portsjon <input data-k="${esc(key)}" value="${esc(raw)}" inputmode="decimal"> ${unit}</label>`+
           deps.filter(x=>x[1]).map(x=>`<div class="ln"><span>${esc(x[0])} <span style="color:var(--mute)">(${x[1]})</span></span><b>${val?fmtQ(x[1]*val,unit):"–"}</b></div>`).join("")+`</div></details></li>`});
     });
