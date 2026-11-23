@@ -201,6 +201,9 @@ function qView(day){
         const key=n+"|"+k, raw=(OVR[key]!==undefined?OVR[key]:qq).toString().trim();
         const pc=/TK/i.test(raw), val=parseFloat(raw)||0, unit=pc?"tk":LIQ.test(nm)?"ml":"g";
         const noPur=/^(SALAT|SAIAKE)/i.test(nm);   // peenestatud ei söö salatit ega saiakest (tükikaup)
+        const dairy=!pure&&!dia&&/(PUDER|HELBED)\s*$|^MAISIMANNA|PIIM|KEEFIR|JOGURT|JUUST|KAKAO|KOHUKE|^VÕI|HAPUKOOR|^HK\s*$/i.test(nm);   // piimavaba rida: pudrud ja piimatooted
+        const MV=DX.filter(d=>!/^Puhvet/i.test(d.n)).reduce((a,d)=>a+d.m,0);
+        const ml=(x,f)=>{const u=DX.find(d=>d.n===x[0]);return dairy&&u&&u.m?`<div class="ln" style="color:var(--warn)"><span>piimavaba <span>(${u.m})</span></span><b>→ ${f(u.m)}</b></div>`:""};
         const noSplit=(/KASTE|KETŠUP|HAPUKOOR|^HK\s*$/i.test(nm)&&[20,30,50].includes(val)&&unit==="g")||/KISSELL|PASTEET|(PUDER|HELBED)\s*$|^KAKAO\s*$|^MAISIMANNA\s*$|^(MOOS|TOORMOOS|MEREVAIK|KOHV|TEE|PIIM|KEEFIR|MAHL|MORSS)\s*$/i.test(nm);   // kastmel peenestatud eraldi ei näidata, läheb kokku
         const deps=DX.filter(d=>lunch||!/^Puhvet/i.test(d.n)).map(d=>[d.n,pure?d.p:dia?d.d:(noPur?d.t-d.p:d.t)]);
         const isPu=nn=>/^Puhvet/i.test(nn);
@@ -210,12 +213,12 @@ function qView(day){
         const puC=deps.filter(x=>isPu(x[0])).reduce((a,x)=>a+x[1],0), regC=cnt-puC;
         const calc=puC&&pv!==val&&!pure&&!dia?val+" "+unit+" × "+regC+" + "+pv+" "+unit+" × "+puC:val+" "+unit+" × "+cnt;
         const tag=pure?'<span class="tag pur">PEENESTATUD</span>':dia?'<span class="tag">DIABEET</span>':"";
-        h+=`<li class="qrow" style="display:block"><details><summary><div class="qn">${tag}${esc(nm)}<small>${val?calc+" = "+fmtQ(tot,unit)+(pure||dia?"":sub(val,unit,lunch,pv,noPur||noSplit)):"kogus puudub"}</small></div><div class="qt">${val?fmtQ(tot,unit):"–"}</div></summary>`+
+        h+=`<li class="qrow" style="display:block"><details><summary><div class="qn">${tag}${esc(nm)}<small>${val?calc+" = "+fmtQ(tot,unit)+(pure||dia?"":sub(val,unit,lunch,pv,noPur||noSplit))+(dairy&&MV?`<br><span style="color:var(--warn)">sh piimavaba: ${MV} × ${val} ${unit} = ${fmtQ(MV*val,unit)}</span>`:""):"kogus puudub"}</small></div><div class="qt">${val?fmtQ(tot,unit):"–"}</div></summary>`+
           `<div class="qd"><label>Portsjon <input data-k="${esc(key)}" value="${esc(raw)}" inputmode="decimal"> ${unit}</label>`+
           (puC?`<label>Puhveti portsjon <input data-k="${esc(key+"|pu")}" value="${esc(pRaw)}" inputmode="decimal"> ${unit}</label>`:"")+
           deps.filter(x=>x[1]).map(x=>{const pp=(pure||dia||noPur||noSplit||isPu(x[0]))?0:((DX.find(d=>d.n===x[0])||{}).p||0), tk=x[1]-pp, w=wt(x[0]), f=n=>val?(unit==="g"?(n*w/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg":fmtQ(n*w,unit)):"–";
-            if(!pp)return `<div class="ln"><span>${esc(x[0])} <span style="color:var(--mute)">(${x[1]})</span></span><b>${f(x[1])}</b></div>`;
-            return `<div class="ln"><span>${esc(x[0])} <span style="color:var(--mute)">(${tk}) TK</span></span><b>→ ${f(tk)}</b></div><div class="ln" style="color:var(--accent)"><span>peenestatud <span>(${pp})</span></span><b>→ ${f(pp)}</b></div>`}).join("")+`</div></details></li>`});
+            if(!pp)return `<div class="ln"><span>${esc(x[0])} <span style="color:var(--mute)">(${x[1]})</span></span><b>${f(x[1])}</b></div>`+ml(x,f);
+            return `<div class="ln"><span>${esc(x[0])} <span style="color:var(--mute)">(${tk}) TK</span></span><b>→ ${f(tk)}</b></div><div class="ln" style="color:var(--accent)"><span>peenestatud <span>(${pp})</span></span><b>→ ${f(pp)}</b></div>`+ml(x,f)}).join("")+`</div></details></li>`});
     });
     h+=`</ul></section>`});
   return h+'<div class="notes"><p>Puuduta rida, et näha koguseid üksuste kaupa ja muuta portsjoni kaalu.</p></div>'}
