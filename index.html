@@ -167,11 +167,11 @@ const LIQ=/MAHL|MORSS|KOHV|TEE\b|^PIIM\s*$|KISSEL|JOOK|^KAKAO\s*$|KEFIIR|KEEFIR\
 let DX=[];
 function effDeps(){const we=sel>=5;   // L, P: puhveti arv eraldi (w), päevahoid ei söö
   return DEPS.map(d=>/^Puhvet/i.test(d.n)?(we?{...d,t:d.w===undefined?70:d.w}:d):d).filter(d=>d.t>0||!/^Puhvet/i.test(d.n))}
-function sub(val,unit,lunch,pv,noPur){
+function sub(val,unit,lunch,pv,noPur,pw){
   if(pv===undefined)pv=val;
   const pe=noPur?0:DX.reduce((a,d)=>a+(/^Puhvet/i.test(d.n)?0:d.p),0), pu=lunch?DX.filter(d=>/^Puhvet/i.test(d.n)).reduce((a,d)=>a+d.t,0):0;
   let r="";
-  if(pe)r+=`<br>sh peenestatud: ${pe} × ${val} ${unit} = ${fmtQ(pe*val,unit)}`;
+  if(pe)r+=`<br>sh peenestatud: ${pe} × ${val} ${unit} = ${fmtQ(pe*val,unit)}${pw?` ≈ ${fmtQ(pe*pw,"g")}`:""}`;
   if(pu)r+=`<br>sh puhvet: ${pu} × ${pv} ${unit} = ${fmtQ(pu*pv,unit)}`;
   return r}
 function qView(day){
@@ -204,6 +204,7 @@ function qView(day){
         const pc0=/TK/i.test(raw), val=parseFloat(raw)||0;
         const pc=pc0||(val>0&&val<10&&!/^(VÕI|TEE)$/i.test(nm)&&!LIQ.test(nm));   // nt „3“ = 3 tükki
         const unit=pc?"tk":LIQ.test(nm)?"ml":"g";
+        const PW=unit==="tk"&&/^(KALAPALA|SARDELL|PIHV|TOORVORST|VIINER)/i.test(nm)?100:0;   // tükikaup: portsjoni kaal g (peenestatud eraldamiseks)
         const noPur=/^(SALAT|SAIAKE)/i.test(nm);   // peenestatud ei söö salatit ega saiakest (tükikaup)
         const dairy=!pure&&!dia&&/(PUDER|HELBED)\s*$|^MAISIMANNA|PIIM|KEEFIR|JOGURT|KAKAO|KOHUKE|HAPUKOOR|^HK\s*$|FRIKADELLIKASTE|KARAMELLKISSELL/i.test(nm);   // piimavaba rida: pudrud ja piimatooted
         const MV=DX.filter(d=>!/^Puhvet/i.test(d.n)).reduce((a,d)=>a+d.m,0);
@@ -217,12 +218,12 @@ function qView(day){
         const puC=deps.filter(x=>isPu(x[0])).reduce((a,x)=>a+x[1],0), regC=cnt-puC;
         const calc=puC&&pv!==val&&!pure&&!dia?val+" "+unit+" × "+regC+" + "+pv+" "+unit+" × "+puC:val+" "+unit+" × "+cnt;
         const tag=pure?'<span class="tag pur">PEENESTATUD</span>':dia?'<span class="tag">DIABEET</span>':"";
-        h+=`<li class="qrow" style="display:block" data-nm="${esc(nm)}" data-raw="${esc(raw)}" data-unit="${unit}" data-flags="${[noSplit&&"NS",noPur&&"NP",dairy&&"DY",pure&&"PU",dia&&"DB"].filter(Boolean).join(" ")}"><details><summary><div class="qn">${tag}${esc(nm)}<small>${val?calc+" = "+fmtQ(tot,unit)+(pure||dia?"":sub(val,unit,lunch,pv,noPur||noSplit))+(dairy&&MV?`<br><span style="color:var(--warn)">sh piimavaba: ${MV} × ${val} ${unit} = ${fmtQ(MV*val,unit)}</span>`:""):"kogus puudub"}</small></div><div class="qt">${val?fmtQ(tot,unit):"–"}</div></summary>`+
+        h+=`<li class="qrow" style="display:block" data-nm="${esc(nm)}" data-raw="${esc(raw)}" data-unit="${unit}" data-flags="${[noSplit&&"NS",noPur&&"NP",dairy&&"DY",pure&&"PU",dia&&"DB"].filter(Boolean).join(" ")}"><details><summary><div class="qn">${tag}${esc(nm)}<small>${val?calc+" = "+fmtQ(tot,unit)+(pure||dia?"":sub(val,unit,lunch,pv,noPur||noSplit,PW))+(dairy&&MV?`<br><span style="color:var(--warn)">sh piimavaba: ${MV} × ${val} ${unit} = ${fmtQ(MV*val,unit)}</span>`:""):"kogus puudub"}</small></div><div class="qt">${val?fmtQ(tot,unit):"–"}</div></summary>`+
           `<div class="qd"><label>Portsjon <input data-k="${esc(key)}" value="${esc(raw)}" inputmode="decimal"> ${unit}</label>`+
           (puC?`<label>Puhveti portsjon <input data-k="${esc(key+"|pu")}" value="${esc(pRaw)}" inputmode="decimal"> ${unit}</label>`:"")+
           deps.filter(x=>x[1]).map(x=>{const pp=(pure||dia||noPur||noSplit||isPu(x[0]))?0:((DX.find(d=>d.n===x[0])||{}).p||0), tk=x[1]-pp, w=wt(x[0]), f=n=>val?(unit==="g"?(n*w/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg":fmtQ(n*w,unit)):"–";
             if(!pp)return `<div class="ln"><span>${esc(x[0])} <span style="color:var(--mute)">(${x[1]})</span></span><b>${f(x[1])}</b></div>`+ml(x,f);
-            return `<div class="ln" style="flex-wrap:wrap;gap:0 8px"><span>${esc(x[0])} <span style="color:var(--mute)">(${x[1]})</span></span><span style="text-align:right"><b>${f(x[1])}</b> <span style="color:var(--accent)">· peenestatud (${pp}) ${f(pp)}</span></span></div>`+ml(x,f)}).join("")+`</div></details></li>`});
+            return `<div class="ln" style="flex-wrap:wrap;gap:0 8px"><span>${esc(x[0])} <span style="color:var(--mute)">(${x[1]})</span></span><span style="text-align:right"><b>${f(x[1])}</b> <span style="color:var(--accent)">· peenestatud (${pp}) ${f(pp)}${PW?` ≈ ${fmtQ(pp*PW,"g")}`:""}</span></span></div>`+ml(x,f)}).join("")+`</div></details></li>`});
     });
     h+=`</ul></section>`});
   return h+'<div class="notes"><p>Puuduta rida, et näha koguseid üksuste kaupa ja muuta portsjoni kaalu.</p></div>'}
