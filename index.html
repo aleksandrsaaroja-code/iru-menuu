@@ -156,7 +156,7 @@ function LS0(k,d){try{return localStorage.getItem(k)||d}catch(e){return d}}
 let VIEW=LS0("iru_view","q");
 const LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
-let DEPS=LS("iru_deps",[{"n": "1A", "t": 28, "p": 4, "m": 2, "d": 2}, {"n": "2A/1", "t": 16, "p": 10, "m": 1, "d": 3}, {"n": "2A/2", "t": 13, "p": 2, "m": 1, "d": 2}, {"n": "2A/3", "t": 14, "p": 0, "m": 1, "d": 3}, {"n": "2B", "t": 20, "p": 4, "m": 3, "d": 4}, {"n": "2D", "t": 19, "p": 2, "m": 2, "d": 3}, {"n": "3A", "t": 27, "p": 11, "m": 0, "d": 2}, {"n": "3B", "t": 39, "p": 13, "m": 8, "d": 10}, {"n": "3C", "t": 26, "p": 10, "m": 5, "d": 6}, {"n": "3D", "t": 37, "p": 3, "m": 4, "d": 9}, {"n": "4A/1", "t": 16, "p": 8, "m": 2, "d": 1}, {"n": "4A/2", "t": 22, "p": 2, "m": 1, "d": 2}, {"n": "4A/3", "t": 10, "p": 1, "m": 3, "d": 1}, {"n": "Söökla", "t": 22, "p": 0, "m": 0, "d": 0}, {"n": "Puhvet", "t": 70, "w": 50, "p": 0, "m": 0, "d": 0}]).map(x=>({d:0,...x}));      // [{n,t,p,m}]  nimi, kliente, peenestatud, piimavaba
+let DEPS=LS("iru_deps",[{"n": "1A", "t": 28, "p": 4, "m": 2, "d": 2}, {"n": "2A/1", "t": 16, "p": 10, "m": 1, "d": 3}, {"n": "2A/2", "t": 13, "p": 2, "m": 1, "d": 2}, {"n": "2A/3", "t": 14, "p": 0, "m": 1, "d": 3}, {"n": "2B", "t": 20, "p": 4, "m": 3, "d": 4}, {"n": "2D", "t": 19, "p": 2, "m": 2, "d": 3}, {"n": "3A", "t": 27, "p": 11, "m": 0, "d": 2}, {"n": "3B", "t": 39, "p": 13, "m": 8, "d": 10}, {"n": "3C", "t": 26, "p": 10, "m": 5, "d": 6}, {"n": "3D", "t": 37, "p": 3, "m": 4, "d": 9}, {"n": "4A/1", "t": 16, "p": 8, "m": 2, "d": 1}, {"n": "4A/2", "t": 22, "p": 2, "m": 1, "d": 2}, {"n": "4A/3", "t": 10, "p": 1, "m": 3, "d": 1}, {"n": "Söökla", "t": 22, "p": 0, "m": 0, "d": 0}, {"n": "Puhvet", "t": 70, "w": 46, "p": 0, "m": 0, "d": 0}]).map(x=>({d:0,...x}));      // [{n,t,p,m}]  nimi, kliente, peenestatud, piimavaba
 let OVR=LS("iru_ovr",{});        // toidu kaalu muudatused
 const num=v=>Math.max(0,parseInt(v)||0);
 const fmtQ=(v,u)=>{const l=u==="g"?"kg":u==="ml"?"l":null;
@@ -166,7 +166,7 @@ const fmtQ=(v,u)=>{const l=u==="g"?"kg":u==="ml"?"l":null;
 const LIQ=/MAHL|MORSS|KOHV|TEE\b|PIIM|KISSEL|JOOK|KAKAO|KEFIIR|SUPP|PUUL/;
 let DX=[];
 function effDeps(){const we=sel>=5;   // L, P: puhveti arv eraldi (w), päevahoid ei söö
-  return DEPS.map(d=>/^Puhvet/i.test(d.n)?(we?{...d,t:d.w===undefined?70:d.w}:d):(we&&d.h?{...d,t:d.t-d.h}:d)).filter(d=>d.t>0||!/^Puhvet/i.test(d.n))}
+  return DEPS.map(d=>/^Puhvet/i.test(d.n)?(we?{...d,t:d.w===undefined?70:d.w}:d):d).filter(d=>d.t>0||!/^Puhvet/i.test(d.n))}
 function sub(val,unit,lunch,pv,noPur){
   if(pv===undefined)pv=val;
   const pe=noPur?0:DX.reduce((a,d)=>a+(/^Puhvet/i.test(d.n)?0:d.p),0), pu=lunch?DX.filter(d=>/^Puhvet/i.test(d.n)).reduce((a,d)=>a+d.t,0):0;
