@@ -218,7 +218,7 @@ function qView(day){
           (puC?`<label>Puhveti portsjon <input data-k="${esc(key+"|pu")}" value="${esc(pRaw)}" inputmode="decimal"> ${unit}</label>`:"")+
           deps.filter(x=>x[1]).map(x=>{const pp=(pure||dia||noPur||noSplit||isPu(x[0]))?0:((DX.find(d=>d.n===x[0])||{}).p||0), tk=x[1]-pp, w=wt(x[0]), f=n=>val?(unit==="g"?(n*w/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg":fmtQ(n*w,unit)):"–";
             if(!pp)return `<div class="ln"><span>${esc(x[0])} <span style="color:var(--mute)">(${x[1]})</span></span><b>${f(x[1])}</b></div>`+ml(x,f);
-            return `<div class="ln"><span>${esc(x[0])} <span style="color:var(--mute)">(${tk}) TK</span></span><b>→ ${f(tk)}</b></div><div class="ln" style="color:var(--accent)"><span>peenestatud <span>(${pp})</span></span><b>→ ${f(pp)}</b></div>`+ml(x,f)}).join("")+`</div></details></li>`});
+            return `<div class="ln" style="flex-wrap:wrap;gap:0 8px"><span>${esc(x[0])} <span style="color:var(--mute)">(${x[1]})</span></span><span style="text-align:right"><b>${f(x[1])}</b> <span style="color:var(--accent)">· peenestatud (${pp}) ${f(pp)}</span></span></div>`+ml(x,f)}).join("")+`</div></details></li>`});
     });
     h+=`</ul></section>`});
   return h+'<div class="notes"><p>Puuduta rida, et näha koguseid üksuste kaupa ja muuta portsjoni kaalu.</p></div>'}
