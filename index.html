@@ -99,7 +99,7 @@ function render(){
   if(day.n&&day.n.length)h+=`<div class="notes">${day.n.map(x=>`<p>${esc(x)}</p>`).join("")}</div>`;
   if(VIEW==="q")h=`<h2 class="date">${DAYS[sel]}, ${dt.getUTCDate()}. ${MONTHS[dt.getUTCMonth()]}</h2>`+qView(day);
   if(VIEW==="s")h=sView();
-  document.getElementById("nav").innerHTML=[["m","Menüü"],["q","Kogused"],["s","Seaded"]].map(([k,n])=>`<button data-v="${k}" style="flex:1;padding:9px;border-radius:10px;border:1px solid #2f6b4f;font:600 15px system-ui;background:${VIEW===k?"#2f6b4f":"#fff"};color:${VIEW===k?"#fff":"#2f6b4f"}">${n}</button>`).join("");
+  document.getElementById("nav").innerHTML=[["q","Kogused"],["m","Menüü"],["s","Seaded"]].map(([k,n])=>`<button data-v="${k}" style="flex:1;padding:9px;border-radius:10px;border:1px solid #2f6b4f;font:600 15px system-ui;background:${VIEW===k?"#2f6b4f":"#fff"};color:${VIEW===k?"#fff":"#2f6b4f"}">${n}</button>`).join("");
   document.getElementById("main").innerHTML=h;
 }
 document.getElementById("days").addEventListener("click",e=>{const b=e.target.closest(".day");if(b){sel=+b.dataset.i;render();scrollTo(0,0)}});
@@ -125,13 +125,15 @@ if(/iphone|ipad|ipod/i.test(navigator.userAgent)){b.style.display="block";b.inne
 })();
 
 // ---- Kogused ----
-let VIEW="m";
+function LS0(k,d){try{return localStorage.getItem(k)||d}catch(e){return d}}
+let VIEW=LS0("iru_view","q");
 const LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let DEPS=LS("iru_deps",[]);      // [{n,t,p,m}]  nimi, kliente, peenestatud, piimavaba
 let OVR=LS("iru_ovr",{});        // toidu kaalu muudatused
 const num=v=>Math.max(0,parseInt(v)||0);
 const fmtQ=(v,u)=>{const l=u==="g"?"kg":u==="ml"?"l":null;
+  if(u==="ml")return (v/1000).toLocaleString("et",{minimumFractionDigits:1,maximumFractionDigits:2})+" l";
   if(l&&v>=1000)return (v/1000).toLocaleString("et",{maximumFractionDigits:2})+" "+l;
   return Math.round(v).toLocaleString("et")+" "+u};
 const LIQ=/MAHL|MORSS|KOHV|TEE\b|PIIM|KISSEL|JOOK|KAKAO|KEFIIR|SUPP|PUUL/;
@@ -154,7 +156,7 @@ function qView(day){
         const deps=DEPS.map(d=>[d.n,pure?d.p:d.t-d.p]);
         const tot=deps.reduce((a,x)=>a+x[1],0)*val;
         h+=`<li><span class="n">${pure?'<span class="tag">PEENESTATUD</span>':""}${esc(nm)}<br><small style="opacity:.75">${deps.filter(x=>x[1]).map(x=>esc(x[0])+" "+fmtQ(x[1]*val,unit)).join(" · ")}</small></span>`+
-          `<span class="q" style="text-align:right"><input data-k="${esc(key)}" value="${esc(raw)}" inputmode="decimal" style="width:64px;text-align:right;padding:4px;border:1px solid #bbb;border-radius:8px"> ${pc?"":unit}<br><b>${val?fmtQ(tot,unit):"–"}</b></span></li>`});
+          `<span class="q" style="text-align:right"><input data-k="${esc(key)}" value="${esc(raw)}" inputmode="decimal" style="width:64px;text-align:right;padding:4px;border:1px solid #bbb;border-radius:8px"> ${pc?"":unit==="ml"?"ml":unit}<br><b>${val?fmtQ(tot,unit):"–"}</b></span></li>`});
     });
     h+=`</ul></section>`});
   return h+'<div class="notes"><p>Kogus = portsjonite arv × kaal. Kaalu saad lahtrisse muuta, nt 150 või 3TK. Tavaportsjoneid = kliendid miinus peenestatud.</p></div>'}
@@ -166,7 +168,7 @@ function sView(){
    `<button id="addd" style="margin-top:8px;padding:10px;width:100%;border-radius:10px;border:1px dashed #2f6b4f;background:#fff;color:#2f6b4f;font:600 15px system-ui">+ Lisa osakond</button>`+
    `<p style="font-size:13px;opacity:.7">Andmed salvestuvad ainult selles telefonis.</p></div></section>`}
 document.addEventListener("click",e=>{
-  const v=e.target.closest("[data-v]");if(v){VIEW=v.dataset.v;render();scrollTo(0,0);return}
+  const v=e.target.closest("[data-v]");if(v){VIEW=v.dataset.v;try{localStorage.setItem("iru_view",VIEW)}catch(_){}render();scrollTo(0,0);return}
   if(e.target.id==="addd"){DEPS.push({n:"Osakond "+(DEPS.length+1),t:0,p:0,m:0});SV("iru_deps",DEPS);render();return}
   const x=e.target.closest("[data-del]");if(x&&confirm("Kustutan osakonna?")){DEPS.splice(+x.dataset.del,1);SV("iru_deps",DEPS);render()}});
 document.addEventListener("change",e=>{const t=e.target;
