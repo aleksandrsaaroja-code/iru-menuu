@@ -205,7 +205,9 @@ function qView(day){
         h+=`<li class="qrow" style="display:block"><details><summary><div class="qn">${tag}${esc(nm)}<small>${val?calc+" = "+fmtQ(tot,unit)+(pure||dia?"":sub(val,unit,lunch,pv)):"kogus puudub"}</small></div><div class="qt">${val?fmtQ(tot,unit):"–"}</div></summary>`+
           `<div class="qd"><label>Portsjon <input data-k="${esc(key)}" value="${esc(raw)}" inputmode="decimal"> ${unit}</label>`+
           (puC?`<label>Puhveti portsjon <input data-k="${esc(key+"|pu")}" value="${esc(pRaw)}" inputmode="decimal"> ${unit}</label>`:"")+
-          deps.filter(x=>x[1]).map(x=>`<div class="ln"><span>${esc(x[0])} <span style="color:var(--mute)">(${x[1]})</span>${(pure||dia||isPu(x[0]))?"":(()=>{const pp=(DEPS.find(d=>d.n===x[0])||{}).p||0;return pp?`<br><small style="color:var(--accent)">sh peenestatud ${pp} → ${val?fmtQ(pp*val,unit):"–"}</small>`:""})()}</span><b>${val?fmtQ(x[1]*wt(x[0]),unit):"–"}</b></div>`).join("")+`</div></details></li>`});
+          deps.filter(x=>x[1]).map(x=>{const pp=(pure||dia||isPu(x[0]))?0:((DEPS.find(d=>d.n===x[0])||{}).p||0), tk=x[1]-pp, w=wt(x[0]), f=n=>val?(unit==="g"?(n*w/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg":fmtQ(n*w,unit)):"–";
+            if(!pp)return `<div class="ln"><span>${esc(x[0])} <span style="color:var(--mute)">(${x[1]})</span></span><b>${f(x[1])}</b></div>`;
+            return `<div class="ln"><span>${esc(x[0])} <span style="color:var(--mute)">(${tk}) TK</span></span><b>→ ${f(tk)}</b></div><div class="ln" style="color:var(--accent)"><span>peenestatud <span>(${pp})</span></span><b>→ ${f(pp)}</b></div>`}).join("")+`</div></details></li>`});
     });
     h+=`</ul></section>`});
   return h+'<div class="notes"><p>Puuduta rida, et näha koguseid üksuste kaupa ja muuta portsjoni kaalu.</p></div>'}
