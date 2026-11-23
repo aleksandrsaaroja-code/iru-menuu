@@ -5,7 +5,8 @@ Allikas: toidulehed (X:\Statistika\Toidulehed_2026 UUS.xlsx) → osakonnad.json.
 ## Kliendid
 - Üldtoit = kõik kliendid (osakonnad + söökla), peenestatud ja suhkruvaba kaasa arvatud.
 - Puhvet lisandub ainult lõunal: E–R 70, L–P 46 (kliendid 304 + puhvet = 374 / 350).
-- Hommik, õhtu, ööoode: 304 klienti.
+- Päevahoid (4A/2, 4) on E–R klientide hulgas; L ja P lahutatakse. Seega E–R kliente = osakonnad + päevahoid + söökla (toidulehe statistikaga 309), L–P 304.
+- Hommik, õhtu, ööoode: sama klientide arv kui lõunal ilma puhvetita.
 - Salat: kõik kliendid + puhvet; kliendile 50 g, puhvetile 100 g.
 
 ## Peenestatud eraldi rida EI OLE (läheb kokku)

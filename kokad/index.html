@@ -166,7 +166,7 @@ const fmtQ=(v,u)=>{const l=u==="g"?"kg":u==="ml"?"l":null;
 const LIQ=/MAHL|MORSS|KOHV|TEE\b|^PIIM\s*$|KISSEL|JOOK|^KAKAO\s*$|KEFIIR|KEEFIR\s*$|SUPP|PUUL/;
 let DX=[];
 function effDeps(){const we=sel>=5;   // L, P: puhveti arv eraldi (w), päevahoid ei söö
-  return DEPS.map(d=>/^Puhvet/i.test(d.n)?(we?{...d,t:d.w===undefined?70:d.w}:d):d).filter(d=>d.t>0||!/^Puhvet/i.test(d.n))}
+  return DEPS.map(d=>/^Puhvet/i.test(d.n)?(we?{...d,t:d.w===undefined?70:d.w}:d):(we&&d.h?{...d,t:d.t-d.h}:d)).filter(d=>d.t>0||!/^Puhvet/i.test(d.n))}
 function sub(val,unit,lunch,pv,noPur,pw){
   if(pv===undefined)pv=val;
   const pe=noPur?0:DX.reduce((a,d)=>a+(/^Puhvet/i.test(d.n)?0:d.p),0), pu=lunch?DX.filter(d=>/^Puhvet/i.test(d.n)).reduce((a,d)=>a+d.t,0):0;
