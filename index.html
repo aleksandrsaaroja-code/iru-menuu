@@ -67,6 +67,12 @@ li.var .n{font-weight:500}
 .qd input{width:80px;text-align:right;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}
 .tag.pur{background:var(--chip);color:var(--accent)}
 .warnbox{background:var(--warn-bg);color:var(--warn);border-radius:12px;padding:8px 12px;font-size:13px;margin:8px 0}
+.dtab{width:100%;border-collapse:collapse;font-size:15px;font-variant-numeric:tabular-nums}
+.dtab th{font-size:11px;font-weight:600;color:var(--mute);text-align:right;padding:6px 4px}
+.dtab th:first-child,.dtab td:first-child{text-align:left}
+.dtab td{padding:6px 4px;text-align:right;border-top:1px solid var(--line)}
+.dtab td.pu{font-weight:800;color:var(--accent)}
+.dtab tr.tot td{font-weight:800;border-top:2px solid var(--line)}
 </style>
 </head>
 <body>
@@ -162,6 +168,9 @@ function qView(day){
   if(!DEPS.length)return '<div class="empty">Lisa kõigepealt üksused: vajuta „Seaded“.</div>';
   const T=DEPS.reduce((a,d)=>({t:a.t+d.t,p:a.p+d.p,m:a.m+d.m,d:a.d+d.d}),{t:0,p:0,m:0,d:0});
   let h=`<div class="chips"><div class="chip"><b>${T.t}</b><span>sööjat</span></div><div class="chip"><b>${T.p}</b><span>peenestatud</span></div><div class="chip"><b>${T.d}</b><span>suhkruvaba</span></div><div class="chip"><b>${T.m}</b><span>piimavaba</span></div></div>`;
+  h+=`<section class="meal"><h3><span>OSAKONNITI</span></h3><div style="padding:4px 14px 8px"><table class="dtab"><tr><th>Üksus</th><th>Sööjaid</th><th>Peenestatud</th><th>Suhkruvaba</th><th>Piimavaba</th></tr>`+
+    DEPS.filter(d=>d.t).map(d=>`<tr><td>${esc(d.n)}</td><td>${d.t}</td><td class="pu">${d.p||"–"}</td><td>${d.d||"–"}</td><td>${d.m||"–"}</td></tr>`).join("")+
+    `<tr class="tot"><td>Kokku</td><td>${T.t}</td><td>${T.p}</td><td>${T.d}</td><td>${T.m}</td></tr></table></div></section>`;
   if(DEPINFO)h+=`<div class="notes" style="margin:0 0 10px"><p>Arvud toidulehelt, uuendatud ${esc(DEPINFO.updated)}</p></div>`;
   day.s.forEach(s=>{
     h+=`<section class="meal"><h3><span>${esc(s.t.split(/\s+KELL\s+/)[0])}</span><em>${esc((s.t.split(/\s+KELL\s+/)[1]||"").replace(".",":"))}</em></h3><ul style="padding-top:0">`;
