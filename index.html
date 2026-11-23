@@ -167,12 +167,15 @@ const LIQ=/MAHL|MORSS|KOHV|TEE\b|PIIM|KISSEL|JOOK|KAKAO|KEFIIR|SUPP|PUUL/;
 function qView(day){
   if(!DEPS.length)return '<div class="empty">Lisa kõigepealt üksused: vajuta „Seaded“.</div>';
   const T=DEPS.reduce((a,d)=>({t:a.t+d.t,p:a.p+d.p,m:a.m+d.m,d:a.d+d.d}),{t:0,p:0,m:0,d:0});
-  let h=`<div class="chips"><div class="chip"><b>${T.t}</b><span>sööjat</span></div><div class="chip"><b>${T.p}</b><span>peenestatud</span></div><div class="chip"><b>${T.d}</b><span>suhkruvaba</span></div><div class="chip"><b>${T.m}</b><span>piimavaba</span></div></div>`;
+  let h=`<div class="chips"><div class="chip"><b>${T.t}</b><span>sööjat lõunal</span></div><div class="chip"><b>${T.p}</b><span>peenestatud</span></div><div class="chip"><b>${T.d}</b><span>suhkruvaba</span></div><div class="chip"><b>${T.m}</b><span>piimavaba</span></div></div>`;
   h+=`<section class="meal"><h3><span>OSAKONNITI</span></h3><div style="padding:4px 14px 8px"><table class="dtab"><tr><th>Üksus</th><th>Sööjaid</th><th>Peenestatud</th><th>Suhkruvaba</th><th>Piimavaba</th></tr>`+
     DEPS.filter(d=>d.t).map(d=>`<tr><td>${esc(d.n)}</td><td>${d.t}</td><td class="pu">${d.p||"–"}</td><td>${d.d||"–"}</td><td>${d.m||"–"}</td></tr>`).join("")+
     `<tr class="tot"><td>Kokku</td><td>${T.t}</td><td>${T.p}</td><td>${T.d}</td><td>${T.m}</td></tr></table></div></section>`;
+  const PU=DEPS.filter(x=>/^Puhvet/i.test(x.n)).reduce((a,x)=>a+x.t,0);
+  if(PU)h+=`<div class="notes" style="margin:0 0 10px"><p>Puhvet (${PU}) on arvestatud ainult lõunal. Hommikul, õhtul ja ööoodel: <b>${T.t-PU}</b> sööjat.</p></div>`;
   if(DEPINFO)h+=`<div class="notes" style="margin:0 0 10px"><p>Arvud toidulehelt, uuendatud ${esc(DEPINFO.updated)}</p></div>`;
   day.s.forEach(s=>{
+    const lunch=/^LÕUNA/i.test(s.t);
     h+=`<section class="meal"><h3><span>${esc(s.t.split(/\s+KELL\s+/)[0])}</span><em>${esc((s.t.split(/\s+KELL\s+/)[1]||"").replace(".",":"))}</em></h3><ul style="padding-top:0">`;
     s.i.forEach(([n,q])=>{
       const v=n.match(/^(DIABEET|PEENESTATUD):\s*(.*)$/);
@@ -183,7 +186,7 @@ function qView(day){
       parts.forEach(([nm,qq],k)=>{
         const key=n+"|"+k, raw=(OVR[key]!==undefined?OVR[key]:qq).toString().trim();
         const pc=/TK/i.test(raw), val=parseFloat(raw)||0, unit=pc?"tk":LIQ.test(nm)?"ml":"g";
-        const deps=DEPS.map(d=>[d.n,pure?d.p:dia?d.d:d.t-d.d]);
+        const deps=DEPS.filter(d=>lunch||!/^Puhvet/i.test(d.n)).map(d=>[d.n,pure?d.p:dia?d.d:d.t-d.d]);
         const cnt=deps.reduce((a,x)=>a+x[1],0), tot=cnt*val;
         const tag=pure?'<span class="tag pur">PEENESTATUD</span>':dia?'<span class="tag">DIABEET</span>':"";
         h+=`<li class="qrow" style="display:block"><details><summary><div class="qn">${tag}${esc(nm)}<small>${val?val+" "+unit+" × "+cnt+" sööjat":"kogus puudub"}</small></div><div class="qt">${val?fmtQ(tot,unit):"–"}</div></summary>`+
