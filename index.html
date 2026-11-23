@@ -204,7 +204,7 @@ function qView(day){
         const pc0=/TK/i.test(raw), val=parseFloat(raw)||0;
         const pc=pc0||(val>0&&val<10&&!/^(VÕI|TEE)$/i.test(nm)&&!LIQ.test(nm));   // nt „3“ = 3 tükki
         const unit=pc?"tk":LIQ.test(nm)?"ml":"g";
-        const PW=unit!=="tk"?0:/^LÕHEVORM/i.test(nm)?150:/^(KALAPALA|SARDELL|PIHV|TOORVORST|VIINER)/i.test(nm)?100:0;   // tükikaup: portsjoni kaal g (peenestatud eraldamiseks)
+        const PW=unit!=="tk"?0:/^LÕHEVORM/i.test(nm)?150:/^(KALAPALA|SARDELL|PIHV|KANAPIHV|TOORVORST|VIINER)/i.test(nm)?100:0;   // tükikaup: portsjoni kaal g (peenestatud eraldamiseks)
         const noPur=/^SAIAKE/i.test(nm);   // peenestatud ei saa saiakest (tükikaup); salat läheb kõigile kokku
         const dairy=!pure&&!dia&&/(PUDER|HELBED)\s*$|^MAISIMANNA|PIIM|KEEFIR|JOGURT|KAKAO|KOHUKE|HAPUKOOR|^HK\s*$|FRIKADELLIKASTE|KARAMELLKISSELL/i.test(nm);   // piimavaba rida: pudrud ja piimatooted
         const mvOf=d=>(d.mv!==undefined?d.mv:d.m)||0;   // piimavaba, mitte-peenestatud
