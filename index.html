@@ -167,9 +167,9 @@ const LIQ=/MAHL|MORSS|KOHV|TEE\b|PIIM|KISSEL|JOOK|KAKAO|KEFIIR|SUPP|PUUL/;
 let DX=[];
 function effDeps(){const we=sel>=5;   // L, P: puhvet ainult E–R, päevahoid ei söö
   return DEPS.filter(d=>!(we&&/^Puhvet/i.test(d.n))).map(d=>we&&d.h?{...d,t:d.t-d.h}:d)}
-function sub(val,unit,lunch,pv){
+function sub(val,unit,lunch,pv,noPur){
   if(pv===undefined)pv=val;
-  const pe=DX.reduce((a,d)=>a+(/^Puhvet/i.test(d.n)?0:d.p),0), pu=lunch?DX.filter(d=>/^Puhvet/i.test(d.n)).reduce((a,d)=>a+d.t,0):0;
+  const pe=noPur?0:DX.reduce((a,d)=>a+(/^Puhvet/i.test(d.n)?0:d.p),0), pu=lunch?DX.filter(d=>/^Puhvet/i.test(d.n)).reduce((a,d)=>a+d.t,0):0;
   let r="";
   if(pe)r+=`<br>sh peenestatud: ${pe} × ${val} ${unit} = ${fmtQ(pe*val,unit)}`;
   if(pu)r+=`<br>sh puhvet: ${pu} × ${pv} ${unit} = ${fmtQ(pu*pv,unit)}`;
@@ -200,7 +200,8 @@ function qView(day){
       parts.forEach(([nm,qq],k)=>{
         const key=n+"|"+k, raw=(OVR[key]!==undefined?OVR[key]:qq).toString().trim();
         const pc=/TK/i.test(raw), val=parseFloat(raw)||0, unit=pc?"tk":LIQ.test(nm)?"ml":"g";
-        const deps=DX.filter(d=>lunch||!/^Puhvet/i.test(d.n)).map(d=>[d.n,pure?d.p:dia?d.d:d.t]);
+        const noPur=/^SALAT/i.test(nm);   // peenestatud ei söö salatit
+        const deps=DX.filter(d=>lunch||!/^Puhvet/i.test(d.n)).map(d=>[d.n,pure?d.p:dia?d.d:(noPur?d.t-d.p:d.t)]);
         const isPu=nn=>/^Puhvet/i.test(nn);
         const pRaw=OVR[key+"|pu"]!==undefined?OVR[key+"|pu"]:(/^SALAT/i.test(nm)?"100":raw), pv=parseFloat(pRaw)||0;
         const wt=nn=>isPu(nn)?pv:val;
@@ -208,10 +209,10 @@ function qView(day){
         const puC=deps.filter(x=>isPu(x[0])).reduce((a,x)=>a+x[1],0), regC=cnt-puC;
         const calc=puC&&pv!==val&&!pure&&!dia?val+" "+unit+" × "+regC+" + "+pv+" "+unit+" × "+puC:val+" "+unit+" × "+cnt;
         const tag=pure?'<span class="tag pur">PEENESTATUD</span>':dia?'<span class="tag">DIABEET</span>':"";
-        h+=`<li class="qrow" style="display:block"><details><summary><div class="qn">${tag}${esc(nm)}<small>${val?calc+" = "+fmtQ(tot,unit)+(pure||dia?"":sub(val,unit,lunch,pv)):"kogus puudub"}</small></div><div class="qt">${val?fmtQ(tot,unit):"–"}</div></summary>`+
+        h+=`<li class="qrow" style="display:block"><details><summary><div class="qn">${tag}${esc(nm)}<small>${val?calc+" = "+fmtQ(tot,unit)+(pure||dia?"":sub(val,unit,lunch,pv,noPur)):"kogus puudub"}</small></div><div class="qt">${val?fmtQ(tot,unit):"–"}</div></summary>`+
           `<div class="qd"><label>Portsjon <input data-k="${esc(key)}" value="${esc(raw)}" inputmode="decimal"> ${unit}</label>`+
           (puC?`<label>Puhveti portsjon <input data-k="${esc(key+"|pu")}" value="${esc(pRaw)}" inputmode="decimal"> ${unit}</label>`:"")+
-          deps.filter(x=>x[1]).map(x=>{const pp=(pure||dia||isPu(x[0]))?0:((DX.find(d=>d.n===x[0])||{}).p||0), tk=x[1]-pp, w=wt(x[0]), f=n=>val?(unit==="g"?(n*w/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg":fmtQ(n*w,unit)):"–";
+          deps.filter(x=>x[1]).map(x=>{const pp=(pure||dia||noPur||isPu(x[0]))?0:((DX.find(d=>d.n===x[0])||{}).p||0), tk=x[1]-pp, w=wt(x[0]), f=n=>val?(unit==="g"?(n*w/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg":fmtQ(n*w,unit)):"–";
             if(!pp)return `<div class="ln"><span>${esc(x[0])} <span style="color:var(--mute)">(${x[1]})</span></span><b>${f(x[1])}</b></div>`;
             return `<div class="ln"><span>${esc(x[0])} <span style="color:var(--mute)">(${tk}) TK</span></span><b>→ ${f(tk)}</b></div><div class="ln" style="color:var(--accent)"><span>peenestatud <span>(${pp})</span></span><b>→ ${f(pp)}</b></div>`}).join("")+`</div></details></li>`});
     });
