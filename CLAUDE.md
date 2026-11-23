@@ -4,7 +4,8 @@ Kasutaja: Aleksandr Saaroja, Iru Hooldekodu toitlustusjuht. Räägi eesti keeles
 
 ## Mälu (loe enne töö alustamist)
 - Koguste arvutamise reeglid: `tools/REEGLID.md`. Loe need enne, kui muudad `index.html` arvutust. Kasutaja on neid mitu korda öelnud, ära küsi uuesti.
-- Arvud tulevad toidulehelt: `tools/uuenda_arvud.py` → `osakonnad.json`. Menüü: `menu.json`.
+- Kaks äppi: juur (`index.html`) = vana menüüäpp, ÄRA MUUDA; `kokad/` = uus äpp kokkadele (kogused).
+- Arvud tulevad toidulehelt: `tools/uuenda_arvud.py` → `kokad/osakonnad.json`. Menüü: `menu.json`.
 
 ## Töö reeglid
 - **Kui arvad, et kasutaja eksib või ütlus on kahemõtteline, küsi üle** enne tegemist. Ära arva.

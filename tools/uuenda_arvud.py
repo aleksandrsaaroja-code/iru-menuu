@@ -8,7 +8,7 @@ import sys, json, subprocess, datetime, pathlib, re
 import openpyxl
 
 src = sys.argv[1] if len(sys.argv) > 1 else r"X:\Statistika\Toidulehed_2026 UUS.xlsx"
-out = pathlib.Path(__file__).resolve().parent.parent / "osakonnad.json"
+out = pathlib.Path(__file__).resolve().parent.parent / "kokad" / "osakonnad.json"
 OLD = json.loads(out.read_text(encoding="utf-8")) if out.exists() else {}
 UNITS = ["1A","2A-1","2A-2","2A-3","2B","2D","3A","3B","3C","3D","4A-1","4A-2","4A-3"]
 
@@ -39,8 +39,8 @@ out.write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
 print("Kirjutatud", out, "· sööjaid kokku", sum(d["t"] for d in deps))
 for w in warn: print("HOIATUS:", w)
 if "--push" in sys.argv:
-    d = out.parent
-    subprocess.run(["git", "-C", str(d), "add", "osakonnad.json"], check=True)
+    d = out.parent.parent
+    subprocess.run(["git", "-C", str(d), "add", "kokad/osakonnad.json"], check=True)
     if subprocess.run(["git", "-C", str(d), "diff", "--cached", "--quiet"]).returncode:
         subprocess.run(["git", "-C", str(d), "commit", "-m", "Arvud uuendatud " + res["updated"]], check=True)
         subprocess.run(["git", "-C", str(d), "push"], check=True)

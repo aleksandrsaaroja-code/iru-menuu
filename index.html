@@ -46,33 +46,6 @@ li.var .n{font-weight:500}
 .notes p{margin:4px 0}
 .empty{text-align:center;color:var(--mute);padding:40px 0}
 .wk{font-size:13px;opacity:.9}
-
-.tabs{display:flex;gap:6px;margin:10px 16px 0;max-width:608px}
-.tabs button{flex:1;padding:10px;border-radius:12px;border:1px solid var(--accent);font:600 16px system-ui;background:var(--card);color:var(--accent)}
-.tabs button.on{background:var(--accent);color:var(--accent-ink)}
-.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 12px}
-.chip{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 4px;text-align:center}
-.chip b{display:block;font-size:22px;line-height:1.1}
-.chip span{font-size:11px;color:var(--mute)}
-.qrow{border-bottom:1px solid var(--line)}
-.qrow:last-child{border-bottom:0}
-.qrow summary{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;cursor:pointer;list-style:none}
-.qrow summary::-webkit-details-marker{display:none}
-.qn{font-weight:600;overflow-wrap:anywhere}
-.qn small{display:block;font-weight:400;color:var(--mute);font-size:13px}
-.qt{font-size:22px;font-weight:800;white-space:nowrap;color:var(--accent);font-variant-numeric:tabular-nums}
-.qd{padding:0 0 12px;font-size:15px}
-.qd .ln{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed var(--line)}
-.qd label{display:flex;align-items:center;gap:8px;margin-bottom:8px;color:var(--mute);font-size:14px}
-.qd input{width:80px;text-align:right;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}
-.tag.pur{background:var(--chip);color:var(--accent)}
-.warnbox{background:var(--warn-bg);color:var(--warn);border-radius:12px;padding:8px 12px;font-size:13px;margin:8px 0}
-.dtab{width:100%;border-collapse:collapse;font-size:15px;font-variant-numeric:tabular-nums}
-.dtab th{font-size:11px;font-weight:600;color:var(--mute);text-align:right;padding:6px 4px}
-.dtab th:first-child,.dtab td:first-child{text-align:left}
-.dtab td{padding:6px 4px;text-align:right;border-top:1px solid var(--line)}
-.dtab td.pu{font-weight:800;color:var(--accent)}
-.dtab tr.tot td{font-weight:800;border-top:2px solid var(--line)}
 </style>
 </head>
 <body>
@@ -84,7 +57,6 @@ li.var .n{font-weight:500}
   <div class="days" id="days" role="tablist"></div>
 </header>
 <div id="inst" style="display:none;margin:8px 12px;padding:10px 12px;border-radius:12px;background:#2f6b4f;color:#fff;font:15px system-ui;text-align:center"></div>
-<nav id="nav" class="tabs"></nav>
 <main id="main"></main>
 <script>
 let DATA=null;
@@ -124,9 +96,6 @@ function render(){
       h+=`<li class="${v?"var":""}${bread?" bread":""}"><span class="n">${v?`<span class="tag">${v[1]}</span>${esc(v[2])}`:esc(n)}</span><span class="q">${esc(q)}</span></li>`});
     h+=`</ul></section>`});
   if(day.n&&day.n.length)h+=`<div class="notes">${day.n.map(x=>`<p>${esc(x)}</p>`).join("")}</div>`;
-  if(VIEW==="q")h=`<h2 class="date">${DAYS[sel]}, ${dt.getUTCDate()}. ${MONTHS[dt.getUTCMonth()]}</h2>`+qView(day);
-  if(VIEW==="s")h=sView();
-  document.getElementById("nav").innerHTML=[["q","Kogused"],["m","Menüü"],["s","Seaded"]].map(([k,n])=>`<button data-v="${k}" class="${VIEW===k?"on":""}">${n}</button>`).join("");
   document.getElementById("main").innerHTML=h;
 }
 document.getElementById("days").addEventListener("click",e=>{const b=e.target.closest(".day");if(b){sel=+b.dataset.i;render();scrollTo(0,0)}});
@@ -150,108 +119,6 @@ addEventListener("beforeinstallprompt",e=>{e.preventDefault();dp=e;b.style.displ
 addEventListener("appinstalled",()=>{b.style.display="none"});
 if(/iphone|ipad|ipod/i.test(navigator.userAgent)){b.style.display="block";b.innerHTML='📲 Paigaldamiseks: puuduta <b>Jaga</b> (ruut noolega) → <b>Lisa avaekraanile</b>'}
 })();
-
-// ---- Kogused ----
-function LS0(k,d){try{return localStorage.getItem(k)||d}catch(e){return d}}
-let VIEW=LS0("iru_view","q");
-const LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
-const SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
-let DEPS=LS("iru_deps",[{"n": "1A", "t": 28, "p": 4, "m": 2, "d": 2}, {"n": "2A/1", "t": 16, "p": 10, "m": 1, "d": 3}, {"n": "2A/2", "t": 13, "p": 2, "m": 1, "d": 2}, {"n": "2A/3", "t": 14, "p": 0, "m": 1, "d": 3}, {"n": "2B", "t": 20, "p": 4, "m": 3, "d": 4}, {"n": "2D", "t": 19, "p": 2, "m": 2, "d": 3}, {"n": "3A", "t": 27, "p": 11, "m": 0, "d": 2}, {"n": "3B", "t": 39, "p": 13, "m": 8, "d": 10}, {"n": "3C", "t": 26, "p": 10, "m": 5, "d": 6}, {"n": "3D", "t": 37, "p": 3, "m": 4, "d": 9}, {"n": "4A/1", "t": 16, "p": 8, "m": 2, "d": 1}, {"n": "4A/2", "t": 22, "p": 2, "m": 1, "d": 2}, {"n": "4A/3", "t": 10, "p": 1, "m": 3, "d": 1}, {"n": "Söökla", "t": 22, "p": 0, "m": 0, "d": 0}, {"n": "Puhvet", "t": 70, "w": 46, "p": 0, "m": 0, "d": 0}]).map(x=>({d:0,...x}));      // [{n,t,p,m}]  nimi, kliente, peenestatud, piimavaba
-let OVR=LS("iru_ovr",{});        // toidu kaalu muudatused
-const num=v=>Math.max(0,parseInt(v)||0);
-const fmtQ=(v,u)=>{const l=u==="g"?"kg":u==="ml"?"l":null;
-  if(u==="ml")return (v/1000).toLocaleString("et",{minimumFractionDigits:1,maximumFractionDigits:2})+" l";
-  if(l&&v>=1000)return (v/1000).toLocaleString("et",{maximumFractionDigits:2})+" "+l;
-  return Math.round(v).toLocaleString("et")+" "+u};
-const LIQ=/MAHL|MORSS|KOHV|TEE\b|^PIIM\s*$|KISSEL|JOOK|^KAKAO\s*$|KEFIIR|KEEFIR\s*$|SUPP|PUUL/;
-let DX=[];
-function effDeps(){const we=sel>=5;   // L, P: puhveti arv eraldi (w), päevahoid ei söö
-  return DEPS.map(d=>/^Puhvet/i.test(d.n)?(we?{...d,t:d.w===undefined?70:d.w}:d):d).filter(d=>d.t>0||!/^Puhvet/i.test(d.n))}
-function sub(val,unit,lunch,pv,noPur,pw){
-  if(pv===undefined)pv=val;
-  const pe=noPur?0:DX.reduce((a,d)=>a+(/^Puhvet/i.test(d.n)?0:d.p),0), pu=lunch?DX.filter(d=>/^Puhvet/i.test(d.n)).reduce((a,d)=>a+d.t,0):0;
-  let r="";
-  if(pe)r+=`<br>sh peenestatud: ${pe} × ${val} ${unit} = ${fmtQ(pe*val,unit)}${pw?` ≈ ${fmtQ(pe*pw,"g")}`:""}`;
-  if(pu)r+=`<br>sh puhvet: ${pu} × ${pv} ${unit} = ${fmtQ(pu*pv,unit)}`;
-  return r}
-function qView(day){
-  DX=effDeps();
-  if(!DX.length)return '<div class="empty">Lisa kõigepealt üksused: vajuta „Seaded“.</div>';
-  const T=DX.reduce((a,d)=>({t:a.t+d.t,p:a.p+d.p,m:a.m+d.m,d:a.d+d.d}),{t:0,p:0,m:0,d:0});
-  const PUX=DX.filter(x=>/^Puhvet/i.test(x.n)).reduce((a,x)=>a+x.t,0), SKX=DX.filter(x=>/^Söökla/i.test(x.n)).reduce((a,x)=>a+x.t,0);
-  let h=`<div class="chips"><div class="chip"><b>${T.t}</b><span>sööjat lõunal</span></div><div class="chip"><b>${T.p}</b><span>peenestatud</span></div><div class="chip"><b>${T.d}</b><span>suhkruvaba</span></div><div class="chip"><b>${T.m}</b><span>piimavaba</span></div></div>`;
-  h+=`<section class="meal"><h3><span>OSAKONNITI</span></h3><div style="padding:4px 14px 8px"><table class="dtab"><tr><th>Üksus</th><th>Sööjaid</th><th>Peenestatud</th><th>Suhkruvaba</th><th>Piimavaba</th></tr>`+
-    DX.filter(d=>d.t).map(d=>`<tr><td>${esc(d.n)}</td><td>${d.t}</td><td class="pu">${d.p||"–"}</td><td>${d.d||"–"}</td><td>${d.m||"–"}</td></tr>`).join("")+
-    `<tr class="tot"><td>Kokku</td><td>${T.t}</td><td>${T.p}</td><td>${T.d}</td><td>${T.m}</td></tr></table></div></section>`;
-  const PU=DX.filter(x=>/^Puhvet/i.test(x.n)).reduce((a,x)=>a+x.t,0);
-  if(PU)h+=`<div class="notes" style="margin:0 0 10px"><p>Puhvet (${PU}) on arvestatud ainult lõunal. Hommikul, õhtul ja ööoodel: <b>${T.t-PU}</b> sööjat.</p></div>`;
-  if(DEPINFO)h+=`<div class="notes" style="margin:0 0 10px"><p>Arvud toidulehelt, uuendatud ${esc(DEPINFO.updated)}</p></div>`;
-  day.s.forEach(s=>{
-    const lunch=/^LÕUNA/i.test(s.t);
-    const puN=DX.filter(x=>/^Puhvet/i.test(x.n)).reduce((a,x)=>a+x.t,0), clN=DX.reduce((a,x)=>a+x.t,0)-puN;
-    const cl=/^(HOMMIKU|LÕUNA|ÕHTU|ÖÖ)/i.test(s.t)?(lunch&&puN?`${clN} + ${puN} = ${clN+puN}`:`${clN}`)+" klienti":"";
-    h+=`<section class="meal"><h3><span>${esc(s.t.split(/\s+KELL\s+/)[0])}${cl?` <span style="font-weight:600;opacity:.85;letter-spacing:0">· ${cl}</span>`:""}</span><em>${esc((s.t.split(/\s+KELL\s+/)[1]||"").replace(".",":"))}</em></h3><ul style="padding-top:0">`;
-    s.i.forEach(([n,q])=>{
-      const v=n.match(/^(DIABEET|PEENESTATUD):\s*(.*)$/);
-      if(/^LEIB, SAI/.test(n))return;
-      const pure=v&&v[1]==="PEENESTATUD", dia=v&&v[1]==="DIABEET", name=v?v[2]:n;
-      const names=name.split(/\s*[,\/]\s*/), qs=q.split("/");
-      const parts=(names.length===qs.length&&qs.length>1)?names.map((x,k)=>[x,qs[k]]):[[name,qs[0]]];
-      parts.forEach(([nm,qq],k)=>{
-        const key=n+"|"+k;
-        let raw=(OVR[key]!==undefined?OVR[key]:qq).toString().trim();
-        if(!raw&&/^(TEE|KOHV|MAHL|KAKAO)\s*$/i.test(nm))raw="250";   // puuduv kogus: jook 250 ml
-        const pc0=/TK/i.test(raw), val=parseFloat(raw)||0;
-        const pc=pc0||(val>0&&val<10&&!/^(VÕI|TEE)$/i.test(nm)&&!LIQ.test(nm));   // nt „3“ = 3 tükki
-        const unit=pc?"tk":LIQ.test(nm)?"ml":"g";
-        const PW=unit!=="tk"?0:/^LÕHEVORM/i.test(nm)?150:/^(KALAPALA|SARDELL|PIHV|KANAPIHV|TOORVORST|VIINER)/i.test(nm)?100:0;   // tükikaup: portsjoni kaal g (peenestatud eraldamiseks)
-        const noPur=/^SAIAKE/i.test(nm);   // peenestatud ei saa saiakest (tükikaup); salat läheb kõigile kokku
-        const dairy=!pure&&!dia&&/(PUDER|HELBED)\s*$|^MAISIMANNA|PIIM|KEEFIR|JOGURT|KAKAO|KOHUKE|HAPUKOOR|^HK\s*$|FRIKADELLIKASTE|KARAMELLKISSELL/i.test(nm);   // piimavaba rida: pudrud ja piimatooted
-        const mvOf=d=>(d.mv!==undefined?d.mv:d.m)||0;   // piimavaba, mitte-peenestatud
-        const MV=DX.filter(d=>!/^Puhvet/i.test(d.n)).reduce((a,d)=>a+mvOf(d),0);
-        const noSplit=(/KASTE|KETŠUP|HAPUKOOR|^HK\s*$/i.test(nm)&&[20,30,50].includes(val)&&unit==="g")||/^SALAT|KISSELL|PASTEET|KOHUPIIM\s*$|^VÕI\s*$|(PUDER|HELBED)\s*$|^KAKAO\s*$|^MAISIMANNA\s*$|^(MOOS|TOORMOOS|KEEDIS|MEREVAIK|KOHV|TEE|PIIM|KEEFIR|MAHL|MORSS)\s*$/i.test(nm);   // kastmel peenestatud eraldi ei näidata, läheb kokku
-        const deps=DX.filter(d=>lunch||!/^Puhvet/i.test(d.n)).map(d=>[d.n,pure?d.p:dia?d.d:(noPur?d.t-d.p:d.t)]);
-        const isPu=nn=>/^Puhvet/i.test(nn);
-        const pRaw=OVR[key+"|pu"]!==undefined?OVR[key+"|pu"]:(/^SALAT/i.test(nm)?"100":raw), pv=parseFloat(pRaw)||0;
-        const wt=nn=>isPu(nn)?pv:val;
-        const cnt=deps.reduce((a,x)=>a+x[1],0), tot=deps.reduce((a,x)=>a+x[1]*wt(x[0]),0);
-        const puC=deps.filter(x=>isPu(x[0])).reduce((a,x)=>a+x[1],0), regC=cnt-puC;
-        const calc=puC&&pv!==val&&!pure&&!dia?val+" "+unit+" × "+regC+" + "+pv+" "+unit+" × "+puC:val+" "+unit+" × "+cnt;
-        const tag=pure?'<span class="tag pur">PEENESTATUD</span>':dia?'<span class="tag">DIABEET</span>':"";
-        h+=`<li class="qrow" style="display:block" data-nm="${esc(nm)}" data-raw="${esc(raw)}" data-unit="${unit}" data-flags="${[noSplit&&"NS",noPur&&"NP",dairy&&"DY",pure&&"PU",dia&&"DB"].filter(Boolean).join(" ")}"><details><summary><div class="qn">${tag}${esc(nm)}<small>${val?calc+" = "+fmtQ(tot,unit)+(pure||dia?"":sub(val,unit,lunch,pv,noPur||noSplit,PW))+(dairy&&MV?`<br><span style="color:var(--warn)">sh piimavaba: ${MV} × ${val} ${unit} = ${fmtQ(MV*val,unit)}</span>`:""):"kogus puudub"}</small></div><div class="qt">${val?fmtQ(tot,unit):"–"}</div></summary>`+
-          `<div class="qd"><label>Portsjon <input data-k="${esc(key)}" value="${esc(raw)}" inputmode="decimal"> ${unit}</label>`+
-          (puC?`<label>Puhveti portsjon <input data-k="${esc(key+"|pu")}" value="${esc(pRaw)}" inputmode="decimal"> ${unit}</label>`:"")+
-          deps.filter(x=>x[1]).map(x=>{const u=DX.find(d=>d.n===x[0])||{}, own=!(pure||dia||isPu(x[0]));
-            const pp=(own&&!noPur&&!noSplit)?(u.p||0):0, pm=(own&&dairy)?mvOf(u):0, main=x[1]-pp-pm, w=wt(x[0]), f=n=>val?(unit==="g"?(n*w/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg":fmtQ(n*w,unit)):"–";
-            if(!pp&&!pm)return `<div class="ln"><span>${esc(x[0])} <span style="color:var(--mute)">(${x[1]})</span></span><b>${f(x[1])}</b></div>`;
-            return `<div class="ln" style="flex-wrap:wrap;gap:0 8px"><span>${esc(x[0])} <span style="color:var(--mute)">(${main})</span></span><span style="text-align:right"><b>${f(main)}</b>`+
-              (pp?` <span style="color:var(--accent)">+ peenestatud (${pp}) ${f(pp)}${PW?` ≈ ${fmtQ(pp*PW,"g")}`:""}</span>`:"")+
-              (pm?` <span style="color:var(--warn)">+ piimavaba (${pm}) ${f(pm)}</span>`:"")+`</span></div>`}).join("")+`</div></details></li>`});
-    });
-    h+=`</ul></section>`});
-  return h+'<div class="notes"><p>Puuduta rida, et näha koguseid üksuste kaupa ja muuta portsjoni kaalu.</p></div>'}
-function sView(){
-  const inp=(i,f,v)=>`<input data-d="${i}" data-f="${f}" value="${v}" inputmode="numeric" style="width:100%;padding:8px;border:1px solid #bbb;border-radius:8px">`;
-  return `<section class="meal"><h3><span>Osakonnad</span></h3><div style="padding:8px">`+
-   (DEPS.length?`<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 28px;gap:6px;font-size:12px;opacity:.7"><span>Üksus</span><span>Sööjaid</span><span>Peenest.</span><span>Piimav.</span><span>Suhkruv.</span><span></span></div>`:"")+
-   DEPS.map((d,i)=>`<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 28px;gap:6px;margin:6px 0"><input data-d="${i}" data-f="n" value="${esc(d.n)}" style="padding:8px;border:1px solid #bbb;border-radius:8px">${inp(i,"t",d.t)}${inp(i,"p",d.p)}${inp(i,"m",d.m)}${inp(i,"d",d.d)}<button data-del="${i}" style="border:0;background:none;font-size:18px">✕</button></div>`).join("")+
-   `<button id="addd" style="margin-top:8px;padding:10px;width:100%;border-radius:10px;border:1px dashed #2f6b4f;background:#fff;color:#2f6b4f;font:600 15px system-ui">+ Lisa üksus</button>`+
-   (DEPINFO?`<p style="font-size:13px">Arvud toidulehelt, uuendatud <b>${esc(DEPINFO.updated)}</b>. Uuenevad ise, kui fail muutub. Käsitsi muudatused kehtivad kuni järgmise uuenduseni.</p>`+Object.entries(DEPINFO.dates||{}).filter(([k,v])=>v&&(Date.now()-Date.parse(v))>7*864e5).map(([k,v])=>`<p style="font-size:13px;color:#b45309">⚠ ${esc(k)} toidulehe kuupäev ${esc(v)} on üle 7 päeva vana</p>`).join(""):"")+`<p style="font-size:13px;opacity:.7">Andmed (toidulehelt) salvestuvad ainult selles telefonis. Märkused: 3D 5×päevas piimavaba, riisivaba, suhkruvaba, 1 keedumuna; 3B iga päev 500 g tatart; 4A/2 päevahoid E–R on üldtoidu sees; 2D ja 4A/1 piimavaba ka laktoosivaba.</p></div></section>`}
-
-// ---- Arvud toidulehelt (osakonnad.json uueneb automaatselt) ----
-let DEPINFO=null;
-fetch("osakonnad.json",{cache:"no-store"}).then(r=>r.json()).then(j=>{
-  DEPINFO=j;
-  const base=LS0("iru_deps_base","");
-  if(base!==j.updated){DEPS=j.deps.map(x=>({d:0,...x}));SV("iru_deps",DEPS);try{localStorage.setItem("iru_deps_base",j.updated)}catch(e){}}
-  render()}).catch(()=>{});
-document.addEventListener("click",e=>{
-  const v=e.target.closest("[data-v]");if(v){VIEW=v.dataset.v;try{localStorage.setItem("iru_view",VIEW)}catch(_){}render();scrollTo(0,0);return}
-  if(e.target.id==="addd"){DEPS.push({n:"Üksus "+(DEPS.length+1),t:0,p:0,m:0,d:0});SV("iru_deps",DEPS);render();return}
-  const x=e.target.closest("[data-del]");if(x&&confirm("Kustutan osakonna?")){DEPS.splice(+x.dataset.del,1);SV("iru_deps",DEPS);render()}});
-document.addEventListener("change",e=>{const t=e.target;
-  if(t.dataset.d!==undefined){const d=DEPS[+t.dataset.d],f=t.dataset.f;d[f]=f==="n"?t.value:num(t.value);SV("iru_deps",DEPS)}
-  if(t.dataset.k!==undefined){OVR[t.dataset.k]=t.value.trim();SV("iru_ovr",OVR);render()}});
 </script>
 </body>
 </html>
