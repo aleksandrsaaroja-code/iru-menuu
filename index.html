@@ -183,7 +183,7 @@ function qView(day){
       parts.forEach(([nm,qq],k)=>{
         const key=n+"|"+k, raw=(OVR[key]!==undefined?OVR[key]:qq).toString().trim();
         const pc=/TK/i.test(raw), val=parseFloat(raw)||0, unit=pc?"tk":LIQ.test(nm)?"ml":"g";
-        const deps=DEPS.map(d=>[d.n,pure?d.p:dia?d.d:d.t-d.p-d.d]);
+        const deps=DEPS.map(d=>[d.n,pure?d.p:dia?d.d:d.t-d.d]);
         const cnt=deps.reduce((a,x)=>a+x[1],0), tot=cnt*val;
         const tag=pure?'<span class="tag pur">PEENESTATUD</span>':dia?'<span class="tag">DIABEET</span>':"";
         h+=`<li class="qrow" style="display:block"><details><summary><div class="qn">${tag}${esc(nm)}<small>${val?val+" "+unit+" × "+cnt+" sööjat":"kogus puudub"}</small></div><div class="qt">${val?fmtQ(tot,unit):"–"}</div></summary>`+
