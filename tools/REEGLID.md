@@ -29,4 +29,4 @@ Allikas: toidulehed (X:\Statistika\Toidulehed_2026 UUS.xlsx) → osakonnad.json.
 - Juust, juustupasteet (laktoosivaba), vahukoor, või
 
 ## Vorm
-- Üksuse rida: kogu kogus kg + peenestatud (arv) kg samal real.
+- Üksuse rida: sulgudes tavatoidu arv (kliendid MIINUS peenestatud) ja selle kg, kõrval "+ peenestatud (arv) kg". Nt 1A (24) 3,6 kg + peenestatud (4) 0,6 kg.
