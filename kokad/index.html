@@ -142,7 +142,7 @@ document.addEventListener("touchend",e=>{const dx=e.changedTouches[0].clientX-sx
   else{if(sel>0)sel--;else{sel=6;monday=new Date(monday.getTime()-7*864e5)}}
   render()},{passive:true});
 const sub0=document.getElementById("sub");
-fetch("../menu.json",{cache:"no-store"}).then(r=>r.json()).then(j=>{DATA=j.weeks;window.UPD=j.updated;render()}).catch(()=>{document.getElementById("main").innerHTML='<div class="empty">Menüü laadimine ebaõnnestus. Ava äpp võrgus vähemalt üks kord.</div>'});
+function loadMenu(first){fetch("../menu.json",{cache:"no-store"}).then(r=>r.json()).then(j=>{if(!first&&window.UPD===j.updated)return;DATA=j.weeks;window.UPD=j.updated;render()}).catch(()=>{if(!first)return;document.getElementById("main").innerHTML='<div class="empty">Menüü laadimine ebaõnnestus. Ava äpp võrgus vähemalt üks kord.</div>'});}loadMenu(true);
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 
 (function(){const b=document.getElementById("inst");
@@ -172,7 +172,7 @@ const SYNC_URL="https://script.google.com/macros/s/AKfycbwgZ6GpOa0jsLnO7C_ajSYwJ
 let SH=LS("iru_sh",{ovr:{},deps:null,depsBase:null}); let SYNC_OK=null;
 const OV=k=>(SH.ovr&&SH.ovr[k]!==undefined)?SH.ovr[k]:OVR[k];
 function applyShared(){if(SH.deps&&typeof DEPINFO!=="undefined"&&DEPINFO&&SH.depsBase===DEPINFO.updated)DEPS=SH.deps.map(x=>({d:0,...x}))}
-async function syncGet(){if(!SYNC_URL)return;try{const r=await fetch(SYNC_URL+"?t="+Date.now(),{cache:"no-store"});const j=await r.json();SH={ovr:j.ovr||{},deps:j.deps||null,depsBase:j.depsBase||null,ver:j.ver||0};SV("iru_sh",SH);SYNC_OK=true;applyShared();render()}catch(e){SYNC_OK=false}}
+async function syncGet(){if(!SYNC_URL)return;try{const r=await fetch(SYNC_URL+"?t="+Date.now(),{cache:"no-store"});const j=await r.json();const old=JSON.stringify(SH);SH={ovr:j.ovr||{},deps:j.deps||null,depsBase:j.depsBase||null,ver:j.ver||0};SV("iru_sh",SH);const was=SYNC_OK;SYNC_OK=true;if(JSON.stringify(SH)!==old||was!==true){applyShared();render()}}catch(e){SYNC_OK=false}}
 async function syncPost(o){if(!SYNC_URL||!PINV)return false;try{const r=await fetch(SYNC_URL,{method:"POST",body:JSON.stringify({pin:PINV,...o})});const j=await r.json();if(!j.ok){if(j.err==="pin"){PINV=null;UNL=false;alert("PIN ei sobi ühise salvestusega")}return false}return true}catch(e){alert("Ühist salvestust ei saanud uuendada (pole võrku?)");return false}}
 function pushDeps(){if(UNL&&PINV&&SYNC_URL&&DEPINFO){SH.deps=DEPS;SH.depsBase=DEPINFO.updated;SV("iru_sh",SH);syncPost({action:"deps",deps:DEPS,base:DEPINFO.updated})}}
 
@@ -262,12 +262,15 @@ function sView(){
 
 // ---- Arvud toidulehelt (osakonnad.json uueneb automaatselt) ----
 let DEPINFO=null;
-fetch("osakonnad.json",{cache:"no-store"}).then(r=>r.json()).then(j=>{
+function loadDeps(){fetch("osakonnad.json",{cache:"no-store"}).then(r=>r.json()).then(j=>{
+  if(DEPINFO&&DEPINFO.updated===j.updated)return;
   DEPINFO=j;
   const base=LS0("iru_deps_base","");
   if(base!==j.updated){DEPS=j.deps.map(x=>({d:0,...x}));SV("iru_deps",DEPS);try{localStorage.setItem("iru_deps_base",j.updated)}catch(e){}}
-  applyShared();render();syncGet()}).catch(()=>{});
-setInterval(syncGet,60000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncGet()});
+  applyShared();render();syncGet()}).catch(()=>{})}
+loadDeps();
+function refreshAll(){loadDeps();loadMenu(false);syncGet()}
+setInterval(refreshAll,60000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshAll()});
 document.addEventListener("click",e=>{
   const rs=e.target.closest("[data-reset]");if(rs){(async()=>{if(SYNC_URL&&!UNL){const ok=await askPin();if(!ok){alert("Muutmiseks on vaja PIN");return}}const b=rs.dataset.reset;[b,b+"|pu",b+"|g"].forEach(k=>{delete OVR[k];if(SH.ovr&&SH.ovr[k]!==undefined&&UNL&&PINV){delete SH.ovr[k];syncPost({action:"ovr",key:k,value:null})}});SV("iru_ovr",OVR);SV("iru_sh",SH);render()})();return}
   const v=e.target.closest("[data-v]");if(v){if(v.dataset.v==="s"&&!UNL){askPin().then(ok=>{if(ok){VIEW="s";render();scrollTo(0,0)}});return}VIEW=v.dataset.v;try{localStorage.setItem("iru_view",VIEW)}catch(_){}render();scrollTo(0,0);return}
