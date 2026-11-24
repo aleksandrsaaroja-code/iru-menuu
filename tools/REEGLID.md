@@ -29,6 +29,7 @@ Allikas: toidulehed (X:\Statistika\Toidulehed_2026 UUS.xlsx) → osakonnad.json.
 - Pudrud, piim, keefir, jogurt, kohupiim, kakao, kohuke, hapukoor, frikadellikaste, karamellkissell
 ## Piimavaba rida EI OLE
 - Juust, juustupasteet (laktoosivaba), vahukoor, või
+- Hirsipuder (esmaspäeval) on tehtud ilma piimata, seega piimavaba rida pole vaja
 
 ## Vorm
 - Üksuse rida: sulgudes tavatoidu arv (kliendid MIINUS peenestatud) ja selle kg, kõrval "+ peenestatud (arv) kg". Nt 1A (24) 3,6 kg + peenestatud (4) 0,6 kg.
