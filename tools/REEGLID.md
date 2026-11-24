@@ -22,6 +22,7 @@ Allikas: toidulehed (X:\Statistika\Toidulehed_2026 UUS.xlsx) → osakonnad.json.
 - Kartul, liha, makaronid, vahud, kohupiimavorm/-kook, kastmed ≥ 100 g jne
 
 ## Tükikaup, peenestatud juures kaal g
+- Tükikaubal on PORTSJON kaalus (nt kalapala 4 tk = 100 g). Põhikogus näidatakse kg-des (nt 30,8 kg), tükkide arv (1232 tk) on ainult INFOKS.
 - Lõhevorm 150 g; kalapala, sardell, pihv, kanapihv, toorvorst, viiner 100 g (kaste mitte)
 
 ## Piimavaba rida (osakonniti) ON
