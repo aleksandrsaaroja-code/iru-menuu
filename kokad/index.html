@@ -212,7 +212,7 @@ function qView(day){
         const pc=pc0||(val>0&&val<10&&!/^(VÕI|TEE)$/i.test(nm)&&!LIQ.test(nm));   // nt „3“ = 3 tükki
         const unit=pc?"tk":LIQ.test(nm)?"ml":"g";
         const PW0=unit!=="tk"?0:/^LÕHEVORM/i.test(nm)?150:/^(KALAPALA|SARDELL|PIHV|KANAPIHV|TOORVORST|VIINER)/i.test(nm)?100:0;   // tükikaup: portsjoni kaal g (peenestatud eraldamiseks)
-        const menuVal=parseFloat(qq)||0, PW=(PW0&&menuVal)?Math.round(PW0*val/menuVal*10)/10:PW0;   // kaal skaleerub, kui portsjoni tk muudetakse
+        const PW=PW0;   // portsjoni kaal on kindel (nt 100 g), tk arv on ainult infoks ega muuda grammi
         const chg=OVR[key]!==undefined||OVR[key+"|pu"]!==undefined;
         const noPur=/^SAIAKE/i.test(nm);   // peenestatud ei saa saiakest (tükikaup); salat läheb kõigile kokku
         const dairy=!pure&&!dia&&/(PUDER|HELBED)\s*$|^MAISIMANNA|PIIM|KEEFIR|JOGURT|KAKAO|KOHUKE|HAPUKOOR|^HK\s*$|FRIKADELLIKASTE|KARAMELLKISSELL/i.test(nm);   // piimavaba rida: pudrud ja piimatooted
