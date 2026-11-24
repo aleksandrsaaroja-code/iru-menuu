@@ -3,7 +3,7 @@
 #  2) lisab Avalda-menuu.ps1-sse kirjavigade automaatse parandamise (varukoopia: Avalda-menuu.ps1.bak)
 #  3) paneb arvude valvuri kaivituma igal sisselogimisel (Windowsi kaivituskaust) ja kaivitab selle kohe
 # Kaivita:  cd $HOME\iru-menuu ; .\tools\paigalda-koik.ps1
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Continue'   # git kirjutab tavateated (nt "From ...") veavoogu, need ei ole vead
 $repo = Split-Path $PSScriptRoot
 Write-Host "1/3 Toon uusimad failid ..."
 git -C $repo pull --rebase --autostash
