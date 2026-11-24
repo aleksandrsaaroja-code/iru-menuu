@@ -124,6 +124,7 @@ function render(){
       h+=`<li class="${v?"var":""}${bread?" bread":""}"><span class="n">${v?`<span class="tag">${v[1]}</span>${esc(v[2])}`:esc(n)}</span><span class="q">${esc(q)}</span></li>`});
     h+=`</ul></section>`});
   if(day.n&&day.n.length)h+=`<div class="notes">${day.n.map(x=>`<p>${esc(x)}</p>`).join("")}</div>`;
+  CURD=dt.toISOString().slice(0,10);
   if(VIEW==="q")h=`<h2 class="date">${DAYS[sel]}, ${dt.getUTCDate()}. ${MONTHS[dt.getUTCMonth()]}</h2>`+qView(day);
   if(VIEW==="s"&&!UNL)VIEW="q";
   if(VIEW==="s")h=sView();
@@ -154,15 +155,27 @@ if(/iphone|ipad|ipod/i.test(navigator.userAgent)){b.style.display="block";b.inne
 
 // ---- Kogused ----
 function LS0(k,d){try{return localStorage.getItem(k)||d}catch(e){return d}}
+let PINV=null;
 let UNL=false;   // Seaded ja portsjonite muutmine avatakse PIN-iga
 const PINH="d3d35c902665390ceb1addf0d15082f1f22112ae21c5740d8085025875b04c13";
 async function sha(t){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
-async function askPin(){const v=prompt("Sisesta PIN");if(v===null)return false;let ok=false;try{ok=(await sha("iru"+v.trim()))===PINH}catch(e){}if(!ok){alert("Vale PIN");return false}UNL=true;return true}
+async function askPin(){const v=prompt("Sisesta PIN");if(v===null)return false;let ok=false;try{ok=(await sha("iru"+v.trim()))===PINH}catch(e){}if(!ok){alert("Vale PIN");return false}UNL=true;PINV=v.trim();return true}
 let VIEW=LS0("iru_view","q");
 const LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let DEPS=LS("iru_deps",[{"n": "1A", "t": 28, "p": 4, "m": 2, "d": 2}, {"n": "2A/1", "t": 16, "p": 10, "m": 1, "d": 3}, {"n": "2A/2", "t": 13, "p": 2, "m": 1, "d": 2}, {"n": "2A/3", "t": 14, "p": 0, "m": 1, "d": 3}, {"n": "2B", "t": 20, "p": 4, "m": 3, "d": 4}, {"n": "2D", "t": 19, "p": 2, "m": 2, "d": 3}, {"n": "3A", "t": 27, "p": 11, "m": 0, "d": 2}, {"n": "3B", "t": 39, "p": 13, "m": 8, "d": 10}, {"n": "3C", "t": 26, "p": 10, "m": 5, "d": 6}, {"n": "3D", "t": 37, "p": 3, "m": 4, "d": 9}, {"n": "4A/1", "t": 16, "p": 8, "m": 2, "d": 1}, {"n": "4A/2", "t": 22, "p": 2, "m": 1, "d": 2}, {"n": "4A/3", "t": 10, "p": 1, "m": 3, "d": 1}, {"n": "Söökla", "t": 22, "p": 0, "m": 0, "d": 0}, {"n": "Puhvet", "t": 70, "w": 46, "p": 0, "m": 0, "d": 0}]).map(x=>({d:0,...x}));      // [{n,t,p,m}]  nimi, kliente, peenestatud, piimavaba
+let CURD="";
 let OVR=LS("iru_ovr",{});        // toidu kaalu muudatused
+
+// ---- Ühine salvestus (Google Apps Script): PIN-iga tehtud muudatused näevad kõik kokad ----
+const SYNC_URL="https://script.google.com/macros/s/AKfycbwgZ6GpOa0jsLnO7C_ajSYwJ-H_l6xHzMTrLUM2wqoM_quR4zAOOH0p0d8HX2fXhK2S/exec";   // pannakse siia pärast Google'i skripti avaldamist
+let SH=LS("iru_sh",{ovr:{},deps:null,depsBase:null}); let SYNC_OK=null;
+const OV=k=>(SH.ovr&&SH.ovr[k]!==undefined)?SH.ovr[k]:OVR[k];
+function applyShared(){if(SH.deps&&typeof DEPINFO!=="undefined"&&DEPINFO&&SH.depsBase===DEPINFO.updated)DEPS=SH.deps.map(x=>({d:0,...x}))}
+async function syncGet(){if(!SYNC_URL)return;try{const r=await fetch(SYNC_URL+"?t="+Date.now(),{cache:"no-store"});const j=await r.json();SH={ovr:j.ovr||{},deps:j.deps||null,depsBase:j.depsBase||null,ver:j.ver||0};SV("iru_sh",SH);SYNC_OK=true;applyShared();render()}catch(e){SYNC_OK=false}}
+async function syncPost(o){if(!SYNC_URL||!PINV)return false;try{const r=await fetch(SYNC_URL,{method:"POST",body:JSON.stringify({pin:PINV,...o})});const j=await r.json();if(!j.ok){if(j.err==="pin"){PINV=null;UNL=false;alert("PIN ei sobi ühise salvestusega")}return false}return true}catch(e){alert("Ühist salvestust ei saanud uuendada (pole võrku?)");return false}}
+function pushDeps(){if(UNL&&PINV&&SYNC_URL&&DEPINFO){SH.deps=DEPS;SH.depsBase=DEPINFO.updated;SV("iru_sh",SH);syncPost({action:"deps",deps:DEPS,base:DEPINFO.updated})}}
+
 const num=v=>Math.max(0,parseInt(v)||0);
 const fmtQ=(v,u)=>{const l=u==="g"?"kg":u==="ml"?"l":null;
   if(u==="ml")return (v/1000).toLocaleString("et",{minimumFractionDigits:1,maximumFractionDigits:2})+" l";
@@ -184,7 +197,7 @@ function qView(day){
   if(!DX.length)return '<div class="empty">Lisa kõigepealt üksused: vajuta „Seaded“.</div>';
   const T=DX.reduce((a,d)=>({t:a.t+d.t,p:a.p+d.p,m:a.m+d.m,d:a.d+d.d}),{t:0,p:0,m:0,d:0});
   const PUX=DX.filter(x=>/^Puhvet/i.test(x.n)).reduce((a,x)=>a+x.t,0), SKX=DX.filter(x=>/^Söökla/i.test(x.n)).reduce((a,x)=>a+x.t,0);
-  let h=`<div class="chips"><div class="chip"><b>${T.t}</b><span>sööjat lõunal</span></div><div class="chip"><b>${T.p}</b><span>peenestatud</span></div><div class="chip"><b>${T.d}</b><span>suhkruvaba</span></div><div class="chip"><b>${T.m}</b><span>piimavaba</span></div></div>`;
+  let h=(UNL&&SYNC_URL?`<div class="notes" style="margin:0 0 8px"><p>🔓 PIN sees: sinu muudatused lähevad kõikidele kokkadele.</p></div>`:"")+`<div class="chips"><div class="chip"><b>${T.t}</b><span>sööjat lõunal</span></div><div class="chip"><b>${T.p}</b><span>peenestatud</span></div><div class="chip"><b>${T.d}</b><span>suhkruvaba</span></div><div class="chip"><b>${T.m}</b><span>piimavaba</span></div></div>`;
   h+=`<section class="meal"><h3><span>OSAKONNITI</span></h3><div style="padding:4px 14px 8px"><table class="dtab"><tr><th>Üksus</th><th>Sööjaid</th><th>Peenestatud</th><th>Suhkruvaba</th><th>Piimavaba</th></tr>`+
     DX.filter(d=>d.t).map(d=>`<tr><td>${esc(d.n)}</td><td>${d.t}</td><td class="pu">${d.p||"–"}</td><td>${d.d||"–"}</td><td>${d.m||"–"}</td></tr>`).join("")+
     `<tr class="tot"><td>Kokku</td><td>${T.t}</td><td>${T.p}</td><td>${T.d}</td><td>${T.m}</td></tr></table></div></section>`;
@@ -203,13 +216,15 @@ function qView(day){
       const names=name.split(/\s*[,\/]\s*/), qs=q.split("/");
       const parts=(names.length===qs.length&&qs.length>1)?names.map((x,k)=>[x,qs[k]]):[[name,qs[0]]];
       parts.forEach(([nm,qq],k)=>{
-        const key=n+"|"+k;
-        let raw=(OVR[key]!==undefined?OVR[key]:qq).toString().trim();
+        const key=CURD+"|"+n+"|"+k;
+        let raw=(OV(key)!==undefined?OV(key):qq).toString().trim();
         if(!raw&&/^(TEE|KOHV|MAHL|KAKAO)\s*$/i.test(nm))raw="250";   // puuduv kogus: jook 250 ml
         const pc0=/TK/i.test(raw), val=parseFloat(raw)||0;
         const pc=pc0||(val>0&&val<10&&!/^(VÕI|TEE)$/i.test(nm)&&!LIQ.test(nm));   // nt „3“ = 3 tükki
         const unit=pc?"tk":LIQ.test(nm)?"ml":"g";
-        const PW=unit!=="tk"?0:/^LÕHEVORM/i.test(nm)?150:/^(KALAPALA|SARDELL|PIHV|KANAPIHV|TOORVORST|VIINER)/i.test(nm)?100:0;   // tükikaup: portsjoni kaal g (peenestatud eraldamiseks)
+        const PW0=unit!=="tk"?0:/^LÕHEVORM/i.test(nm)?150:/^(KALAPALA|SARDELL|PIHV|KANAPIHV|TOORVORST|VIINER)/i.test(nm)?100:0;   // tükikaup: portsjoni kaal g (peenestatud eraldamiseks)
+        const gRaw=OV(key+"|g")!==undefined?String(OV(key+"|g")):(PW0?String(PW0):""), PW=unit==="tk"?(parseFloat(gRaw)>0?parseFloat(gRaw):PW0):0;   // portsjoni kaal (g) on muudetav; tk arv on ainult infoks
+        const chg=OV(key)!==undefined||OV(key+"|pu")!==undefined||OV(key+"|g")!==undefined;
         const noPur=/^SAIAKE/i.test(nm);   // peenestatud ei saa saiakest (tükikaup); salat läheb kõigile kokku
         const dairy=!pure&&!dia&&/(PUDER|HELBED)\s*$|^MAISIMANNA|PIIM|KEEFIR|JOGURT|KAKAO|KOHUKE|HAPUKOOR|^HK\s*$|FRIKADELLIKASTE|KARAMELLKISSELL/i.test(nm);   // piimavaba rida: pudrud ja piimatooted
         const mvOf=d=>(d.mv!==undefined?d.mv:d.m)||0;   // piimavaba, mitte-peenestatud
@@ -217,15 +232,17 @@ function qView(day){
         const noSplit=(/KASTE|KETŠUP|HAPUKOOR|^HK\s*$/i.test(nm)&&[20,30,50].includes(val)&&unit==="g")||/^SALAT|KISSELL|PASTEET|KOHUPIIM\s*$|^VÕI\s*$|(PUDER|HELBED)\s*$|^KAKAO\s*$|^MAISIMANNA\s*$|^(MOOS|TOORMOOS|KEEDIS|MEREVAIK|KOHV|TEE|PIIM|KEEFIR|MAHL|MORSS)\s*$/i.test(nm);   // kastmel peenestatud eraldi ei näidata, läheb kokku
         const deps=DX.filter(d=>lunch||!/^Puhvet/i.test(d.n)).map(d=>[d.n,pure?d.p:dia?d.d:(noPur?d.t-d.p:d.t)]);
         const isPu=nn=>/^Puhvet/i.test(nn);
-        const pRaw=OVR[key+"|pu"]!==undefined?OVR[key+"|pu"]:(/^SALAT/i.test(nm)?"100":raw), pv=parseFloat(pRaw)||0;
+        const pRaw=OV(key+"|pu")!==undefined?OV(key+"|pu"):(/^SALAT/i.test(nm)?"100":raw), pv=parseFloat(pRaw)||0;
         const wt=nn=>isPu(nn)?pv:val;
         const cnt=deps.reduce((a,x)=>a+x[1],0), tot=deps.reduce((a,x)=>a+x[1]*wt(x[0]),0);
         const puC=deps.filter(x=>isPu(x[0])).reduce((a,x)=>a+x[1],0), regC=cnt-puC;
         const calc=puC&&pv!==val&&!pure&&!dia?val+" "+unit+" × "+regC+" + "+pv+" "+unit+" × "+puC:val+" "+unit+" × "+cnt;
-        const tag=pure?'<span class="tag pur">PEENESTATUD</span>':dia?'<span class="tag">DIABEET</span>':"";
-        h+=`<li class="qrow" style="display:block" data-nm="${esc(nm)}" data-raw="${esc(raw)}" data-unit="${unit}" data-flags="${[noSplit&&"NS",noPur&&"NP",dairy&&"DY",pure&&"PU",dia&&"DB"].filter(Boolean).join(" ")}"><details><summary><div class="qn">${tag}${esc(nm)}<small>${val?(PW?PW+" g × "+cnt+" = "+fmtQ(cnt*PW,"g")+" <span style='opacity:.75'>(info: "+calc+" = "+fmtQ(tot,unit)+")</span>":calc+" = "+fmtQ(tot,unit))+(pure||dia?"":sub(val,unit,lunch,pv,noPur||noSplit,PW))+(dairy&&MV?`<br><span style="color:var(--warn)">sh piimavaba: ${MV} × ${val} ${unit} = ${fmtQ(MV*val,unit)}</span>`:""):"kogus puudub"}</small></div><div class="qt">${val?(PW?fmtQ(cnt*PW,"g"):fmtQ(tot,unit)):"–"}${PW&&val?`<br><small style="font-size:13px;font-weight:600;opacity:.75">${fmtQ(tot,unit)}</small>`:""}</div></summary>`+
-          `<div class="qd"><label>Portsjon <input data-k="${esc(key)}" ${UNL?"":"readonly"} value="${esc(raw)}" inputmode="decimal"> ${unit}</label>`+
-          (puC?`<label>Puhveti portsjon <input data-k="${esc(key+"|pu")}" ${UNL?"":"readonly"} value="${esc(pRaw)}" inputmode="decimal"> ${unit}</label>`:"")+
+        const tag0=pure?'<span class="tag pur">PEENESTATUD</span>':dia?'<span class="tag">DIABEET</span>':"";
+        const tag=tag0+(chg?'<span class="tag">MUUDETUD</span>':"");
+        h+=`<li class="qrow" style="display:block" data-nm="${esc(nm)}" data-raw="${esc(raw)}" data-unit="${unit}" data-flags="${[noSplit&&"NS",noPur&&"NP",dairy&&"DY",pure&&"PU",dia&&"DB"].filter(Boolean).join(" ")}"><details><summary><div class="qn">${tag}${esc(nm)}${PW?` <span style="font-weight:500;opacity:.8">(${PW} g)</span>`:""}<small>${val?(PW?PW+" g × "+cnt+" = "+fmtQ(cnt*PW,"g")+" <span style='opacity:.75'>(info: "+calc+" = "+fmtQ(tot,unit)+")</span>":calc+" = "+fmtQ(tot,unit))+(pure||dia?"":sub(val,unit,lunch,pv,noPur||noSplit,PW))+(dairy&&MV?`<br><span style="color:var(--warn)">sh piimavaba: ${MV} × ${val} ${unit} = ${fmtQ(MV*val,unit)}</span>`:""):"kogus puudub"}</small></div><div class="qt">${val?(PW?fmtQ(cnt*PW,"g"):fmtQ(tot,unit)):"–"}${PW&&val?`<br><small style="font-size:13px;font-weight:600;opacity:.75">${fmtQ(tot,unit)}</small>`:""}</div></summary>`+
+          `<div class="qd"><label>Portsjon (menüüs: ${esc(qq)}) <input data-k="${esc(key)}" value="${esc(raw)}" inputmode="decimal"> ${unit}</label>`+(chg?`<button data-reset="${esc(key)}" style="margin:0 0 8px;padding:6px 10px;border-radius:10px;border:1px solid var(--accent);background:var(--card);color:var(--accent);font:600 13px system-ui">Lähtesta menüü väärtusele</button>`:"")+
+          (unit==="tk"?`<label>Portsjoni kaal <input data-k="${esc(key+"|g")}" value="${esc(gRaw)}" inputmode="decimal"> g</label>`:"")+
+          (puC?`<label>Puhveti portsjon <input data-k="${esc(key+"|pu")}" value="${esc(pRaw)}" inputmode="decimal"> ${unit}</label>`:"")+
           deps.filter(x=>x[1]).map(x=>{const u=DX.find(d=>d.n===x[0])||{}, own=!(pure||dia||isPu(x[0]));
             const pp=(own&&!noPur&&!noSplit)?(u.p||0):0, pm=(own&&dairy)?mvOf(u):0, main=x[1]-pp-pm, w=wt(x[0]), f=n=>val?(PW?(n*PW/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg ("+(n*w)+" tk)":unit==="g"?(n*w/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg":fmtQ(n*w,unit)):"–";
             if(!pp&&!pm)return `<div class="ln"><span>${esc(x[0])} <span style="color:var(--mute)">(${x[1]})</span></span><b>${f(x[1])}</b></div>`;
@@ -241,7 +258,7 @@ function sView(){
    (DEPS.length?`<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 28px;gap:6px;font-size:12px;opacity:.7"><span>Üksus</span><span>Sööjaid</span><span>Peenest.</span><span>Piimav.</span><span>Suhkruv.</span><span></span></div>`:"")+
    DEPS.map((d,i)=>`<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 28px;gap:6px;margin:6px 0"><input data-d="${i}" data-f="n" value="${esc(d.n)}" style="padding:8px;border:1px solid #bbb;border-radius:8px">${inp(i,"t",d.t)}${inp(i,"p",d.p)}${inp(i,"m",d.m)}${inp(i,"d",d.d)}<button data-del="${i}" style="border:0;background:none;font-size:18px">✕</button></div>`).join("")+
    `<button id="addd" style="margin-top:8px;padding:10px;width:100%;border-radius:10px;border:1px dashed #2f6b4f;background:#fff;color:#2f6b4f;font:600 15px system-ui">+ Lisa üksus</button>`+
-   (DEPINFO?`<p style="font-size:13px">Arvud toidulehelt, uuendatud <b>${esc(DEPINFO.updated)}</b>. Uuenevad ise, kui fail muutub. Käsitsi muudatused kehtivad kuni järgmise uuenduseni.</p>`+Object.entries(DEPINFO.dates||{}).filter(([k,v])=>v&&(Date.now()-Date.parse(v))>7*864e5).map(([k,v])=>`<p style="font-size:13px;color:#b45309">⚠ ${esc(k)} toidulehe kuupäev ${esc(v)} on üle 7 päeva vana</p>`).join(""):"")+`<p style="font-size:13px;opacity:.7">Andmed (toidulehelt) salvestuvad ainult selles telefonis. Märkused: 3D 5×päevas piimavaba, riisivaba, suhkruvaba, 1 keedumuna; 3B iga päev 500 g tatart; 4A/2 päevahoid E–R on üldtoidu sees; 2D ja 4A/1 piimavaba ka laktoosivaba.</p></div></section>`}
+   (DEPINFO?`<p style="font-size:13px">Arvud toidulehelt, uuendatud <b>${esc(DEPINFO.updated)}</b>. Uuenevad ise, kui fail muutub. Käsitsi muudatused kehtivad kuni järgmise uuenduseni.</p>`+Object.entries(DEPINFO.dates||{}).filter(([k,v])=>v&&(Date.now()-Date.parse(v))>7*864e5).map(([k,v])=>`<p style="font-size:13px;color:#b45309">⚠ ${esc(k)} toidulehe kuupäev ${esc(v)} on üle 7 päeva vana</p>`).join(""):"")+`<p style="font-size:13px">Ühine salvestus: <b>${SYNC_URL?(SYNC_OK===false?"ei ühendu":"ühendatud"):"ei ole seadistatud"}</b>. PIN-iga tehtud muudatused (arvud ja kogused) näevad kõik kokad.</p>`+`<p style="font-size:13px;opacity:.7">Andmed (toidulehelt) salvestuvad ainult selles telefonis. Märkused: 3D 5×päevas piimavaba, riisivaba, suhkruvaba, 1 keedumuna; 3B iga päev 500 g tatart; 4A/2 päevahoid E–R on üldtoidu sees; 2D ja 4A/1 piimavaba ka laktoosivaba.</p></div></section>`}
 
 // ---- Arvud toidulehelt (osakonnad.json uueneb automaatselt) ----
 let DEPINFO=null;
@@ -249,14 +266,17 @@ fetch("osakonnad.json",{cache:"no-store"}).then(r=>r.json()).then(j=>{
   DEPINFO=j;
   const base=LS0("iru_deps_base","");
   if(base!==j.updated){DEPS=j.deps.map(x=>({d:0,...x}));SV("iru_deps",DEPS);try{localStorage.setItem("iru_deps_base",j.updated)}catch(e){}}
-  render()}).catch(()=>{});
+  applyShared();render();syncGet()}).catch(()=>{});
+setInterval(syncGet,60000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncGet()});
 document.addEventListener("click",e=>{
+  const rs=e.target.closest("[data-reset]");if(rs){const b=rs.dataset.reset;[b,b+"|pu",b+"|g"].forEach(k=>{delete OVR[k];if(SH.ovr&&SH.ovr[k]!==undefined&&UNL&&PINV){delete SH.ovr[k];syncPost({action:"ovr",key:k,value:null})}});SV("iru_ovr",OVR);SV("iru_sh",SH);render();return}
   const v=e.target.closest("[data-v]");if(v){if(v.dataset.v==="s"&&!UNL){askPin().then(ok=>{if(ok){VIEW="s";render();scrollTo(0,0)}});return}VIEW=v.dataset.v;try{localStorage.setItem("iru_view",VIEW)}catch(_){}render();scrollTo(0,0);return}
-  if(e.target.id==="addd"){DEPS.push({n:"Üksus "+(DEPS.length+1),t:0,p:0,m:0,d:0});SV("iru_deps",DEPS);render();return}
-  const x=e.target.closest("[data-del]");if(x&&confirm("Kustutan osakonna?")){DEPS.splice(+x.dataset.del,1);SV("iru_deps",DEPS);render()}});
-document.addEventListener("change",e=>{const t=e.target;if(!UNL)return;
-  if(t.dataset.d!==undefined){const d=DEPS[+t.dataset.d],f=t.dataset.f;d[f]=f==="n"?t.value:num(t.value);SV("iru_deps",DEPS)}
-  if(t.dataset.k!==undefined){OVR[t.dataset.k]=t.value.trim();SV("iru_ovr",OVR);render()}});
+  if(e.target.id==="addd"){DEPS.push({n:"Üksus "+(DEPS.length+1),t:0,p:0,m:0,d:0});SV("iru_deps",DEPS);pushDeps();render();return}
+  const x=e.target.closest("[data-del]");if(x&&confirm("Kustutan osakonna?")){DEPS.splice(+x.dataset.del,1);SV("iru_deps",DEPS);pushDeps();render()}});
+document.addEventListener("change",e=>{const t=e.target;
+  if(t.dataset.k!==undefined){const k=t.dataset.k,v=t.value.trim();if(UNL&&PINV&&SYNC_URL){SH.ovr=SH.ovr||{};SH.ovr[k]=v;SV("iru_sh",SH);render();syncPost({action:"ovr",key:k,value:v});return}OVR[k]=v;SV("iru_ovr",OVR);render();return}
+  if(!UNL)return;
+  if(t.dataset.d!==undefined){const d=DEPS[+t.dataset.d],f=t.dataset.f;d[f]=f==="n"?t.value:num(t.value);SV("iru_deps",DEPS);pushDeps()}});
 </script>
 </body>
 </html>

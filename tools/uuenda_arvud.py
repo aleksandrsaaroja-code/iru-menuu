@@ -35,6 +35,16 @@ puh = OLD.get("puhvet", 70)
 puh_w = OLD.get("puhvet_w", 46)   # puhvet laupäeval ja pühapäeval
 deps.append({"n": "Puhvet", "t": puh, "w": puh_w, "p": 0, "m": 0, "d": 0})
 res = {"updated": datetime.datetime.now().strftime("%d.%m.%Y %H:%M"), "puhvet": puh, "puhvet_w": puh_w, "dates": dates, "deps": deps}
+same = False
+if out.exists():
+    try:
+        o = dict(OLD); o.pop("updated", None); n = dict(res); n.pop("updated", None)
+        same = (o == n)
+    except Exception:
+        same = False
+if same:
+    print("Arvud ei muutunud, faili ei kirjutata (uuendamise aeg jääb endiseks)")
+    sys.exit(0)
 out.write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
 print("Kirjutatud", out, "· sööjaid kokku", sum(d["t"] for d in deps))
 for w in warn: print("HOIATUS:", w)
