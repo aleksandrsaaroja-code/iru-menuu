@@ -176,8 +176,8 @@ function sub(val,unit,lunch,pv,noPur,pw){
   if(pv===undefined)pv=val;
   const pe=noPur?0:DX.reduce((a,d)=>a+(/^Puhvet/i.test(d.n)?0:d.p),0), pu=lunch?DX.filter(d=>/^Puhvet/i.test(d.n)).reduce((a,d)=>a+d.t,0):0;
   let r="";
-  if(pe)r+=`<br>sh peenestatud: ${pe} × ${val} ${unit} = ${fmtQ(pe*val,unit)}${pw?` ≈ ${fmtQ(pe*pw,"g")}`:""}`;
-  if(pu)r+=`<br>sh puhvet: ${pu} × ${pv} ${unit} = ${fmtQ(pu*pv,unit)}`;
+  if(pe)r+=pw?`<br>sh peenestatud: ${pe} × ${pw} g = ${fmtQ(pe*pw,"g")} (${pe*val} tk)`:`<br>sh peenestatud: ${pe} × ${val} ${unit} = ${fmtQ(pe*val,unit)}`;
+  if(pu)r+=pw?`<br>sh puhvet: ${pu} × ${pw} g = ${fmtQ(pu*pw,"g")} (${pu*pv} tk)`:`<br>sh puhvet: ${pu} × ${pv} ${unit} = ${fmtQ(pu*pv,unit)}`;
   return r}
 function qView(day){
   DX=effDeps();
@@ -223,14 +223,14 @@ function qView(day){
         const puC=deps.filter(x=>isPu(x[0])).reduce((a,x)=>a+x[1],0), regC=cnt-puC;
         const calc=puC&&pv!==val&&!pure&&!dia?val+" "+unit+" × "+regC+" + "+pv+" "+unit+" × "+puC:val+" "+unit+" × "+cnt;
         const tag=pure?'<span class="tag pur">PEENESTATUD</span>':dia?'<span class="tag">DIABEET</span>':"";
-        h+=`<li class="qrow" style="display:block" data-nm="${esc(nm)}" data-raw="${esc(raw)}" data-unit="${unit}" data-flags="${[noSplit&&"NS",noPur&&"NP",dairy&&"DY",pure&&"PU",dia&&"DB"].filter(Boolean).join(" ")}"><details><summary><div class="qn">${tag}${esc(nm)}<small>${val?calc+" = "+fmtQ(tot,unit)+(pure||dia?"":sub(val,unit,lunch,pv,noPur||noSplit,PW))+(dairy&&MV?`<br><span style="color:var(--warn)">sh piimavaba: ${MV} × ${val} ${unit} = ${fmtQ(MV*val,unit)}</span>`:""):"kogus puudub"}</small></div><div class="qt">${val?fmtQ(tot,unit):"–"}${PW&&val?`<br><small style="font-size:13px;font-weight:600">≈ ${fmtQ(cnt*PW,"g")}</small>`:""}</div></summary>`+
+        h+=`<li class="qrow" style="display:block" data-nm="${esc(nm)}" data-raw="${esc(raw)}" data-unit="${unit}" data-flags="${[noSplit&&"NS",noPur&&"NP",dairy&&"DY",pure&&"PU",dia&&"DB"].filter(Boolean).join(" ")}"><details><summary><div class="qn">${tag}${esc(nm)}<small>${val?(PW?PW+" g × "+cnt+" = "+fmtQ(cnt*PW,"g")+" <span style='opacity:.75'>(info: "+calc+" = "+fmtQ(tot,unit)+")</span>":calc+" = "+fmtQ(tot,unit))+(pure||dia?"":sub(val,unit,lunch,pv,noPur||noSplit,PW))+(dairy&&MV?`<br><span style="color:var(--warn)">sh piimavaba: ${MV} × ${val} ${unit} = ${fmtQ(MV*val,unit)}</span>`:""):"kogus puudub"}</small></div><div class="qt">${val?(PW?fmtQ(cnt*PW,"g"):fmtQ(tot,unit)):"–"}${PW&&val?`<br><small style="font-size:13px;font-weight:600;opacity:.75">${fmtQ(tot,unit)}</small>`:""}</div></summary>`+
           `<div class="qd"><label>Portsjon <input data-k="${esc(key)}" ${UNL?"":"readonly"} value="${esc(raw)}" inputmode="decimal"> ${unit}</label>`+
           (puC?`<label>Puhveti portsjon <input data-k="${esc(key+"|pu")}" ${UNL?"":"readonly"} value="${esc(pRaw)}" inputmode="decimal"> ${unit}</label>`:"")+
           deps.filter(x=>x[1]).map(x=>{const u=DX.find(d=>d.n===x[0])||{}, own=!(pure||dia||isPu(x[0]));
-            const pp=(own&&!noPur&&!noSplit)?(u.p||0):0, pm=(own&&dairy)?mvOf(u):0, main=x[1]-pp-pm, w=wt(x[0]), f=n=>val?(unit==="g"?(n*w/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg":fmtQ(n*w,unit)):"–";
+            const pp=(own&&!noPur&&!noSplit)?(u.p||0):0, pm=(own&&dairy)?mvOf(u):0, main=x[1]-pp-pm, w=wt(x[0]), f=n=>val?(PW?(n*PW/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg ("+(n*w)+" tk)":unit==="g"?(n*w/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg":fmtQ(n*w,unit)):"–";
             if(!pp&&!pm)return `<div class="ln"><span>${esc(x[0])} <span style="color:var(--mute)">(${x[1]})</span></span><b>${f(x[1])}</b></div>`;
             return `<div class="ln" style="flex-wrap:wrap;gap:0 8px"><span>${esc(x[0])} <span style="color:var(--mute)">(${main})</span></span><span style="text-align:right"><b>${f(main)}</b>`+
-              (pp?` <span style="color:var(--accent)">+ peenestatud (${pp}) ${f(pp)}${PW?` ≈ ${fmtQ(pp*PW,"g")}`:""}</span>`:"")+
+              (pp?` <span style="color:var(--accent)">+ peenestatud (${pp}) ${f(pp)}</span>`:"")+
               (pm?` <span style="color:var(--warn)">+ piimavaba (${pm}) ${f(pm)}</span>`:"")+`</span></div>`}).join("")+`</div></details></li>`});
     });
     h+=`</ul></section>`});
