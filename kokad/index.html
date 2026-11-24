@@ -212,8 +212,8 @@ function qView(day){
         const pc=pc0||(val>0&&val<10&&!/^(VÕI|TEE)$/i.test(nm)&&!LIQ.test(nm));   // nt „3“ = 3 tükki
         const unit=pc?"tk":LIQ.test(nm)?"ml":"g";
         const PW0=unit!=="tk"?0:/^LÕHEVORM/i.test(nm)?150:/^(KALAPALA|SARDELL|PIHV|KANAPIHV|TOORVORST|VIINER)/i.test(nm)?100:0;   // tükikaup: portsjoni kaal g (peenestatud eraldamiseks)
-        const PW=PW0;   // portsjoni kaal on kindel (nt 100 g), tk arv on ainult infoks ega muuda grammi
-        const chg=OVR[key]!==undefined||OVR[key+"|pu"]!==undefined;
+        const gRaw=OVR[key+"|g"]!==undefined?String(OVR[key+"|g"]):String(PW0), PW=PW0?(parseFloat(gRaw)>0?parseFloat(gRaw):PW0):0;   // portsjoni kaal (g) on muudetav; tk arv on ainult infoks
+        const chg=OVR[key]!==undefined||OVR[key+"|pu"]!==undefined||OVR[key+"|g"]!==undefined;
         const noPur=/^SAIAKE/i.test(nm);   // peenestatud ei saa saiakest (tükikaup); salat läheb kõigile kokku
         const dairy=!pure&&!dia&&/(PUDER|HELBED)\s*$|^MAISIMANNA|PIIM|KEEFIR|JOGURT|KAKAO|KOHUKE|HAPUKOOR|^HK\s*$|FRIKADELLIKASTE|KARAMELLKISSELL/i.test(nm);   // piimavaba rida: pudrud ja piimatooted
         const mvOf=d=>(d.mv!==undefined?d.mv:d.m)||0;   // piimavaba, mitte-peenestatud
@@ -230,6 +230,7 @@ function qView(day){
         const tag=tag0+(chg?'<span class="tag">MUUDETUD</span>':"");
         h+=`<li class="qrow" style="display:block" data-nm="${esc(nm)}" data-raw="${esc(raw)}" data-unit="${unit}" data-flags="${[noSplit&&"NS",noPur&&"NP",dairy&&"DY",pure&&"PU",dia&&"DB"].filter(Boolean).join(" ")}"><details><summary><div class="qn">${tag}${esc(nm)}${PW?` <span style="font-weight:500;opacity:.8">(${PW} g)</span>`:""}<small>${val?(PW?PW+" g × "+cnt+" = "+fmtQ(cnt*PW,"g")+" <span style='opacity:.75'>(info: "+calc+" = "+fmtQ(tot,unit)+")</span>":calc+" = "+fmtQ(tot,unit))+(pure||dia?"":sub(val,unit,lunch,pv,noPur||noSplit,PW))+(dairy&&MV?`<br><span style="color:var(--warn)">sh piimavaba: ${MV} × ${val} ${unit} = ${fmtQ(MV*val,unit)}</span>`:""):"kogus puudub"}</small></div><div class="qt">${val?(PW?fmtQ(cnt*PW,"g"):fmtQ(tot,unit)):"–"}${PW&&val?`<br><small style="font-size:13px;font-weight:600;opacity:.75">${fmtQ(tot,unit)}</small>`:""}</div></summary>`+
           `<div class="qd"><label>Portsjon (menüüs: ${esc(qq)}) <input data-k="${esc(key)}" value="${esc(raw)}" inputmode="decimal"> ${unit}</label>`+(chg?`<button data-reset="${esc(key)}" style="margin:0 0 8px;padding:6px 10px;border-radius:10px;border:1px solid var(--accent);background:var(--card);color:var(--accent);font:600 13px system-ui">Lähtesta menüü väärtusele</button>`:"")+
+          (PW0?`<label>Portsjoni kaal <input data-k="${esc(key+"|g")}" value="${esc(gRaw)}" inputmode="decimal"> g</label>`:"")+
           (puC?`<label>Puhveti portsjon <input data-k="${esc(key+"|pu")}" value="${esc(pRaw)}" inputmode="decimal"> ${unit}</label>`:"")+
           deps.filter(x=>x[1]).map(x=>{const u=DX.find(d=>d.n===x[0])||{}, own=!(pure||dia||isPu(x[0]));
             const pp=(own&&!noPur&&!noSplit)?(u.p||0):0, pm=(own&&dairy)?mvOf(u):0, main=x[1]-pp-pm, w=wt(x[0]), f=n=>val?(PW?(n*PW/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg ("+(n*w)+" tk)":unit==="g"?(n*w/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg":fmtQ(n*w,unit)):"–";
@@ -256,7 +257,7 @@ fetch("osakonnad.json",{cache:"no-store"}).then(r=>r.json()).then(j=>{
   if(base!==j.updated){DEPS=j.deps.map(x=>({d:0,...x}));SV("iru_deps",DEPS);try{localStorage.setItem("iru_deps_base",j.updated)}catch(e){}}
   render()}).catch(()=>{});
 document.addEventListener("click",e=>{
-  const rs=e.target.closest("[data-reset]");if(rs){delete OVR[rs.dataset.reset];delete OVR[rs.dataset.reset+"|pu"];SV("iru_ovr",OVR);render();return}
+  const rs=e.target.closest("[data-reset]");if(rs){delete OVR[rs.dataset.reset];delete OVR[rs.dataset.reset+"|pu"];delete OVR[rs.dataset.reset+"|g"];SV("iru_ovr",OVR);render();return}
   const v=e.target.closest("[data-v]");if(v){if(v.dataset.v==="s"&&!UNL){askPin().then(ok=>{if(ok){VIEW="s";render();scrollTo(0,0)}});return}VIEW=v.dataset.v;try{localStorage.setItem("iru_view",VIEW)}catch(_){}render();scrollTo(0,0);return}
   if(e.target.id==="addd"){DEPS.push({n:"Üksus "+(DEPS.length+1),t:0,p:0,m:0,d:0});SV("iru_deps",DEPS);render();return}
   const x=e.target.closest("[data-del]");if(x&&confirm("Kustutan osakonna?")){DEPS.splice(+x.dataset.del,1);SV("iru_deps",DEPS);render()}});
