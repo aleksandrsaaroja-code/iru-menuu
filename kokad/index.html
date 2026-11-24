@@ -124,6 +124,7 @@ function render(){
       h+=`<li class="${v?"var":""}${bread?" bread":""}"><span class="n">${v?`<span class="tag">${v[1]}</span>${esc(v[2])}`:esc(n)}</span><span class="q">${esc(q)}</span></li>`});
     h+=`</ul></section>`});
   if(day.n&&day.n.length)h+=`<div class="notes">${day.n.map(x=>`<p>${esc(x)}</p>`).join("")}</div>`;
+  CURD=dt.toISOString().slice(0,10);
   if(VIEW==="q")h=`<h2 class="date">${DAYS[sel]}, ${dt.getUTCDate()}. ${MONTHS[dt.getUTCMonth()]}</h2>`+qView(day);
   if(VIEW==="s"&&!UNL)VIEW="q";
   if(VIEW==="s")h=sView();
@@ -162,6 +163,7 @@ let VIEW=LS0("iru_view","q");
 const LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let DEPS=LS("iru_deps",[{"n": "1A", "t": 28, "p": 4, "m": 2, "d": 2}, {"n": "2A/1", "t": 16, "p": 10, "m": 1, "d": 3}, {"n": "2A/2", "t": 13, "p": 2, "m": 1, "d": 2}, {"n": "2A/3", "t": 14, "p": 0, "m": 1, "d": 3}, {"n": "2B", "t": 20, "p": 4, "m": 3, "d": 4}, {"n": "2D", "t": 19, "p": 2, "m": 2, "d": 3}, {"n": "3A", "t": 27, "p": 11, "m": 0, "d": 2}, {"n": "3B", "t": 39, "p": 13, "m": 8, "d": 10}, {"n": "3C", "t": 26, "p": 10, "m": 5, "d": 6}, {"n": "3D", "t": 37, "p": 3, "m": 4, "d": 9}, {"n": "4A/1", "t": 16, "p": 8, "m": 2, "d": 1}, {"n": "4A/2", "t": 22, "p": 2, "m": 1, "d": 2}, {"n": "4A/3", "t": 10, "p": 1, "m": 3, "d": 1}, {"n": "Söökla", "t": 22, "p": 0, "m": 0, "d": 0}, {"n": "Puhvet", "t": 70, "w": 46, "p": 0, "m": 0, "d": 0}]).map(x=>({d:0,...x}));      // [{n,t,p,m}]  nimi, kliente, peenestatud, piimavaba
+let CURD="";
 let OVR=LS("iru_ovr",{});        // toidu kaalu muudatused
 const num=v=>Math.max(0,parseInt(v)||0);
 const fmtQ=(v,u)=>{const l=u==="g"?"kg":u==="ml"?"l":null;
@@ -203,13 +205,15 @@ function qView(day){
       const names=name.split(/\s*[,\/]\s*/), qs=q.split("/");
       const parts=(names.length===qs.length&&qs.length>1)?names.map((x,k)=>[x,qs[k]]):[[name,qs[0]]];
       parts.forEach(([nm,qq],k)=>{
-        const key=n+"|"+k;
+        const key=CURD+"|"+n+"|"+k;
         let raw=(OVR[key]!==undefined?OVR[key]:qq).toString().trim();
         if(!raw&&/^(TEE|KOHV|MAHL|KAKAO)\s*$/i.test(nm))raw="250";   // puuduv kogus: jook 250 ml
         const pc0=/TK/i.test(raw), val=parseFloat(raw)||0;
         const pc=pc0||(val>0&&val<10&&!/^(VÕI|TEE)$/i.test(nm)&&!LIQ.test(nm));   // nt „3“ = 3 tükki
         const unit=pc?"tk":LIQ.test(nm)?"ml":"g";
-        const PW=unit!=="tk"?0:/^LÕHEVORM/i.test(nm)?150:/^(KALAPALA|SARDELL|PIHV|KANAPIHV|TOORVORST|VIINER)/i.test(nm)?100:0;   // tükikaup: portsjoni kaal g (peenestatud eraldamiseks)
+        const PW0=unit!=="tk"?0:/^LÕHEVORM/i.test(nm)?150:/^(KALAPALA|SARDELL|PIHV|KANAPIHV|TOORVORST|VIINER)/i.test(nm)?100:0;   // tükikaup: portsjoni kaal g (peenestatud eraldamiseks)
+        const menuVal=parseFloat(qq)||0, PW=(PW0&&menuVal)?Math.round(PW0*val/menuVal*10)/10:PW0;   // kaal skaleerub, kui portsjoni tk muudetakse
+        const chg=OVR[key]!==undefined||OVR[key+"|pu"]!==undefined;
         const noPur=/^SAIAKE/i.test(nm);   // peenestatud ei saa saiakest (tükikaup); salat läheb kõigile kokku
         const dairy=!pure&&!dia&&/(PUDER|HELBED)\s*$|^MAISIMANNA|PIIM|KEEFIR|JOGURT|KAKAO|KOHUKE|HAPUKOOR|^HK\s*$|FRIKADELLIKASTE|KARAMELLKISSELL/i.test(nm);   // piimavaba rida: pudrud ja piimatooted
         const mvOf=d=>(d.mv!==undefined?d.mv:d.m)||0;   // piimavaba, mitte-peenestatud
@@ -222,10 +226,11 @@ function qView(day){
         const cnt=deps.reduce((a,x)=>a+x[1],0), tot=deps.reduce((a,x)=>a+x[1]*wt(x[0]),0);
         const puC=deps.filter(x=>isPu(x[0])).reduce((a,x)=>a+x[1],0), regC=cnt-puC;
         const calc=puC&&pv!==val&&!pure&&!dia?val+" "+unit+" × "+regC+" + "+pv+" "+unit+" × "+puC:val+" "+unit+" × "+cnt;
-        const tag=pure?'<span class="tag pur">PEENESTATUD</span>':dia?'<span class="tag">DIABEET</span>':"";
+        const tag0=pure?'<span class="tag pur">PEENESTATUD</span>':dia?'<span class="tag">DIABEET</span>':"";
+        const tag=tag0+(chg?'<span class="tag">MUUDETUD</span>':"");
         h+=`<li class="qrow" style="display:block" data-nm="${esc(nm)}" data-raw="${esc(raw)}" data-unit="${unit}" data-flags="${[noSplit&&"NS",noPur&&"NP",dairy&&"DY",pure&&"PU",dia&&"DB"].filter(Boolean).join(" ")}"><details><summary><div class="qn">${tag}${esc(nm)}${PW?` <span style="font-weight:500;opacity:.8">(${PW} g)</span>`:""}<small>${val?(PW?PW+" g × "+cnt+" = "+fmtQ(cnt*PW,"g")+" <span style='opacity:.75'>(info: "+calc+" = "+fmtQ(tot,unit)+")</span>":calc+" = "+fmtQ(tot,unit))+(pure||dia?"":sub(val,unit,lunch,pv,noPur||noSplit,PW))+(dairy&&MV?`<br><span style="color:var(--warn)">sh piimavaba: ${MV} × ${val} ${unit} = ${fmtQ(MV*val,unit)}</span>`:""):"kogus puudub"}</small></div><div class="qt">${val?(PW?fmtQ(cnt*PW,"g"):fmtQ(tot,unit)):"–"}${PW&&val?`<br><small style="font-size:13px;font-weight:600;opacity:.75">${fmtQ(tot,unit)}</small>`:""}</div></summary>`+
-          `<div class="qd"><label>Portsjon <input data-k="${esc(key)}" ${UNL?"":"readonly"} value="${esc(raw)}" inputmode="decimal"> ${unit}</label>`+
-          (puC?`<label>Puhveti portsjon <input data-k="${esc(key+"|pu")}" ${UNL?"":"readonly"} value="${esc(pRaw)}" inputmode="decimal"> ${unit}</label>`:"")+
+          `<div class="qd"><label>Portsjon (menüüs: ${esc(qq)}) <input data-k="${esc(key)}" value="${esc(raw)}" inputmode="decimal"> ${unit}</label>`+(chg?`<button data-reset="${esc(key)}" style="margin:0 0 8px;padding:6px 10px;border-radius:10px;border:1px solid var(--accent);background:var(--card);color:var(--accent);font:600 13px system-ui">Lähtesta menüü väärtusele</button>`:"")+
+          (puC?`<label>Puhveti portsjon <input data-k="${esc(key+"|pu")}" value="${esc(pRaw)}" inputmode="decimal"> ${unit}</label>`:"")+
           deps.filter(x=>x[1]).map(x=>{const u=DX.find(d=>d.n===x[0])||{}, own=!(pure||dia||isPu(x[0]));
             const pp=(own&&!noPur&&!noSplit)?(u.p||0):0, pm=(own&&dairy)?mvOf(u):0, main=x[1]-pp-pm, w=wt(x[0]), f=n=>val?(PW?(n*PW/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg ("+(n*w)+" tk)":unit==="g"?(n*w/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg":fmtQ(n*w,unit)):"–";
             if(!pp&&!pm)return `<div class="ln"><span>${esc(x[0])} <span style="color:var(--mute)">(${x[1]})</span></span><b>${f(x[1])}</b></div>`;
@@ -251,10 +256,13 @@ fetch("osakonnad.json",{cache:"no-store"}).then(r=>r.json()).then(j=>{
   if(base!==j.updated){DEPS=j.deps.map(x=>({d:0,...x}));SV("iru_deps",DEPS);try{localStorage.setItem("iru_deps_base",j.updated)}catch(e){}}
   render()}).catch(()=>{});
 document.addEventListener("click",e=>{
+  const rs=e.target.closest("[data-reset]");if(rs){delete OVR[rs.dataset.reset];delete OVR[rs.dataset.reset+"|pu"];SV("iru_ovr",OVR);render();return}
   const v=e.target.closest("[data-v]");if(v){if(v.dataset.v==="s"&&!UNL){askPin().then(ok=>{if(ok){VIEW="s";render();scrollTo(0,0)}});return}VIEW=v.dataset.v;try{localStorage.setItem("iru_view",VIEW)}catch(_){}render();scrollTo(0,0);return}
   if(e.target.id==="addd"){DEPS.push({n:"Üksus "+(DEPS.length+1),t:0,p:0,m:0,d:0});SV("iru_deps",DEPS);render();return}
   const x=e.target.closest("[data-del]");if(x&&confirm("Kustutan osakonna?")){DEPS.splice(+x.dataset.del,1);SV("iru_deps",DEPS);render()}});
-document.addEventListener("change",e=>{const t=e.target;if(!UNL)return;
+document.addEventListener("change",e=>{const t=e.target;
+  if(t.dataset.k!==undefined){OVR[t.dataset.k]=t.value.trim();SV("iru_ovr",OVR);render();return}
+  if(!UNL)return;
   if(t.dataset.d!==undefined){const d=DEPS[+t.dataset.d],f=t.dataset.f;d[f]=f==="n"?t.value:num(t.value);SV("iru_deps",DEPS)}
   if(t.dataset.k!==undefined){OVR[t.dataset.k]=t.value.trim();SV("iru_ovr",OVR);render()}});
 </script>

@@ -33,3 +33,4 @@ Allikas: toidulehed (X:\Statistika\Toidulehed_2026 UUS.xlsx) → osakonnad.json.
 ## Vorm
 - Üksuse rida: sulgudes tavatoidu arv (kliendid MIINUS peenestatud) ja selle kg, kõrval "+ peenestatud (arv) kg". Nt 1A (24) 3,6 kg + peenestatud (4) 0,6 kg.
 - Piimavaba sama põhimõte: sulgudes tavatoit = kliendid − peenestatud − piimavaba; kõrval "+ piimavaba (arv) kg". Piimavaba = ainult mitte-peenestatud (peenestatud piimavabu eraldi rida pole, nad on peenestatud hulgas). Arv tuleb väljalt `mv` (osakonnad.json).
+- Portsjoni kogust (nt kalapala 4 tk → 1 tk) saab äpis päeva kaupa muuta (avatud rea lahter „Portsjon“); kaal skaleerub (1 tk = 25 g). Muudatus kehtib ainult sellel päeval ja selles telefonis, „Lähtesta“ toob menüü väärtuse tagasi.
