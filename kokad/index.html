@@ -168,7 +168,7 @@ let CURD="";
 let OVR=LS("iru_ovr",{});        // toidu kaalu muudatused
 
 // ---- Ühine salvestus (Google Apps Script): PIN-iga tehtud muudatused näevad kõik kokad ----
-const SYNC_URL="";   // pannakse siia pärast Google'i skripti avaldamist
+const SYNC_URL="https://script.google.com/macros/s/AKfycbwgZ6GpOa0jsLnO7C_ajSYwJ-H_l6xHzMTrLUM2wqoM_quR4zAOOH0p0d8HX2fXhK2S/exec";   // pannakse siia pärast Google'i skripti avaldamist
 let SH=LS("iru_sh",{ovr:{},deps:null,depsBase:null}); let SYNC_OK=null;
 const OV=k=>(SH.ovr&&SH.ovr[k]!==undefined)?SH.ovr[k]:OVR[k];
 function applyShared(){if(SH.deps&&typeof DEPINFO!=="undefined"&&DEPINFO&&SH.depsBase===DEPINFO.updated)DEPS=SH.deps.map(x=>({d:0,...x}))}
