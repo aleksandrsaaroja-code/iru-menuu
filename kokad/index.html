@@ -269,12 +269,12 @@ fetch("osakonnad.json",{cache:"no-store"}).then(r=>r.json()).then(j=>{
   applyShared();render();syncGet()}).catch(()=>{});
 setInterval(syncGet,60000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncGet()});
 document.addEventListener("click",e=>{
-  const rs=e.target.closest("[data-reset]");if(rs){const b=rs.dataset.reset;[b,b+"|pu",b+"|g"].forEach(k=>{delete OVR[k];if(SH.ovr&&SH.ovr[k]!==undefined&&UNL&&PINV){delete SH.ovr[k];syncPost({action:"ovr",key:k,value:null})}});SV("iru_ovr",OVR);SV("iru_sh",SH);render();return}
+  const rs=e.target.closest("[data-reset]");if(rs){(async()=>{if(SYNC_URL&&!UNL){const ok=await askPin();if(!ok){alert("Muutmiseks on vaja PIN");return}}const b=rs.dataset.reset;[b,b+"|pu",b+"|g"].forEach(k=>{delete OVR[k];if(SH.ovr&&SH.ovr[k]!==undefined&&UNL&&PINV){delete SH.ovr[k];syncPost({action:"ovr",key:k,value:null})}});SV("iru_ovr",OVR);SV("iru_sh",SH);render()})();return}
   const v=e.target.closest("[data-v]");if(v){if(v.dataset.v==="s"&&!UNL){askPin().then(ok=>{if(ok){VIEW="s";render();scrollTo(0,0)}});return}VIEW=v.dataset.v;try{localStorage.setItem("iru_view",VIEW)}catch(_){}render();scrollTo(0,0);return}
   if(e.target.id==="addd"){DEPS.push({n:"Üksus "+(DEPS.length+1),t:0,p:0,m:0,d:0});SV("iru_deps",DEPS);pushDeps();render();return}
   const x=e.target.closest("[data-del]");if(x&&confirm("Kustutan osakonna?")){DEPS.splice(+x.dataset.del,1);SV("iru_deps",DEPS);pushDeps();render()}});
 document.addEventListener("change",e=>{const t=e.target;
-  if(t.dataset.k!==undefined){const k=t.dataset.k,v=t.value.trim();if(UNL&&PINV&&SYNC_URL){SH.ovr=SH.ovr||{};SH.ovr[k]=v;SV("iru_sh",SH);render();syncPost({action:"ovr",key:k,value:v});return}OVR[k]=v;SV("iru_ovr",OVR);render();return}
+  if(t.dataset.k!==undefined){const k=t.dataset.k,v=t.value.trim();(async()=>{if(SYNC_URL&&!UNL){const ok=await askPin();if(!ok){alert("Muutmiseks on vaja PIN");render();return}}if(UNL&&PINV&&SYNC_URL){SH.ovr=SH.ovr||{};SH.ovr[k]=v;SV("iru_sh",SH);render();syncPost({action:"ovr",key:k,value:v});return}OVR[k]=v;SV("iru_ovr",OVR);render()})();return}
   if(!UNL)return;
   if(t.dataset.d!==undefined){const d=DEPS[+t.dataset.d],f=t.dataset.f;d[f]=f==="n"?t.value:num(t.value);SV("iru_deps",DEPS);pushDeps()}});
 </script>
