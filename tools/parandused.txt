@@ -1,0 +1,5 @@
+# VIGANE=PARANDATUD (terved sõnad, suurtähtedega). Rakendub, kui kontrolli_menuu.py käivitatakse võtmega --paranda.
+KALAPA=KALAPALA
+VANILLIKASTE=VANILJEKASTE
+KAKAO-KISSELL=KAKAOKISSELL
+MAISIMANNA=MAISIMANNAPUDER
