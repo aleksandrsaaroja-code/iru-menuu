@@ -53,6 +53,8 @@ li.var .n{font-weight:500}
 .tabs button.on{background:var(--accent);color:var(--accent-ink)}
 .chips{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 12px}
 .chip{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 4px;text-align:center}
+.chip{cursor:pointer}
+.chip.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
 .chip b{display:block;font-size:22px;line-height:1.1}
 .chip span{font-size:11px;color:var(--mute)}
 .qrow{border-bottom:1px solid var(--line)}
@@ -195,7 +197,8 @@ let PINV=null;
 let UNL=false;   // Seaded ja portsjonite muutmine avatakse PIN-iga
 const PINH="d3d35c902665390ceb1addf0d15082f1f22112ae21c5740d8085025875b04c13";
 async function sha(t){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
-async function askPin(){const v=prompt("Sisesta PIN");if(v===null)return false;let ok=false;try{ok=(await sha("iru"+v.trim()))===PINH}catch(e){}if(!ok){alert("Vale PIN");return false}UNL=true;PINV=v.trim();return true}
+async function askPin(){let v;try{v=prompt("Sisesta PIN")}catch(e){return false}   // mõnes sisseehitatud brauseris prompt() puudub
+  if(v===null||v===undefined)return false;let ok=false;try{ok=(await sha("iru"+v.trim()))===PINH}catch(e){}if(!ok){alert("Vale PIN");return false}UNL=true;PINV=v.trim();return true}
 let VIEW=LS0("iru_view","q");
 const LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
@@ -231,12 +234,20 @@ function sub(val,unit,lunch,pv,noPur,pw){
   if(pe)r+=pw?`<br>sh peenestatud: ${pe} × ${pw} g = ${fmtQ(pe*pw,"g")} (${pe*val} tk)`:`<br>sh peenestatud: ${pe} × ${val} ${unit} = ${fmtQ(pe*val,unit)}`;
   if(pu)r+=pw?`<br>sh puhvet: ${pu} × ${pw} g = ${fmtQ(pu*pw,"g")} (${pu*pv} tk)`:`<br>sh puhvet: ${pu} × ${pv} ${unit} = ${fmtQ(pu*pv,unit)}`;
   return r}
+let CHIP=null;   // avatud kokkuvõtte-kast (t, p, d, m): puudutades avaneb tabel osakonniti
+function chipPanel(k,T){
+  if(!k)return "";
+  const names={t:"Sööjad lõunal",p:"Peenestatud",d:"Suhkruvaba",m:"Piimavaba"};
+  const rows=DX.filter(d=>(d[k]||0)>0);
+  return `<section class="meal"><h3><span>${names[k].toUpperCase()} OSAKONNITI</span></h3><div style="padding:4px 14px 8px"><table class="dtab"><tr><th>Üksus</th><th>${names[k]}</th></tr>`+
+    rows.map(d=>{const mk=CURD+"|C"+k+"|"+d.n;return `<tr class="${MK[mk]?"mark":""}" data-mk="${esc(mk)}"><td>${esc(d.n)}</td><td class="pu">${d[k]}</td></tr>`}).join("")+
+    `<tr class="tot"><td>Kokku</td><td>${T[k]}</td></tr></table></div></section>`}
 function qView(day){
   DX=effDeps();
   if(!DX.length)return '<div class="empty">Lisa kõigepealt üksused: vajuta „Seaded“.</div>';
   const T=DX.reduce((a,d)=>({t:a.t+d.t,p:a.p+d.p,m:a.m+d.m,d:a.d+d.d}),{t:0,p:0,m:0,d:0});
   const PUX=DX.filter(x=>/^Puhvet/i.test(x.n)).reduce((a,x)=>a+x.t,0), SKX=DX.filter(x=>/^Söökla/i.test(x.n)).reduce((a,x)=>a+x.t,0);
-  let h=(UNL&&SYNC_URL?`<div class="notes" style="margin:0 0 8px"><p>🔓 PIN sees: sinu muudatused lähevad kõikidele kokkadele.</p></div>`:"")+`<div class="chips"><div class="chip"><b>${T.t}</b><span>sööjat lõunal</span></div><div class="chip"><b>${T.p}</b><span>peenestatud</span></div><div class="chip"><b>${T.d}</b><span>suhkruvaba</span></div><div class="chip"><b>${T.m}</b><span>piimavaba</span></div></div>`;
+  let h=(UNL&&SYNC_URL?`<div class="notes" style="margin:0 0 8px"><p>🔓 PIN sees: sinu muudatused lähevad kõikidele kokkadele.</p></div>`:"")+`<div class="chips">${[["t",T.t,"sööjat lõunal"],["p",T.p,"peenestatud"],["d",T.d,"suhkruvaba"],["m",T.m,"piimavaba"]].map(([k,v,n])=>`<div class="chip${CHIP===k?" on":""}" data-chip="${k}"><b>${v}</b><span>${n}</span></div>`).join("")}</div>`+chipPanel(CHIP,T);
   h+=`<section class="meal"><h3><span>OSAKONNITI</span></h3><div style="padding:4px 14px 8px"><table class="dtab"><tr><th>Üksus</th><th>Sööjaid</th><th>Tk</th><th>Peenest.</th><th>Suhkruv.</th><th>Piimav.</th></tr>`+
     DX.filter(d=>d.t).map(d=>{const mk=CURD+"|T|"+d.n;return `<tr class="${MK[mk]?"mark":""}" data-mk="${esc(mk)}"><td>${esc(d.n)}${NI(d.n)}</td><td>${d.t}</td><td><b>${d.t-d.p}</b></td><td class="pu">${d.p||"–"}</td><td>${d.d||"–"}</td><td>${d.m||"–"}</td></tr>`+(noteOf(d.n).length?`<tr class="nt"><td colspan="6">${noteOf(d.n).join("<br>")}</td></tr>`:"")}).join("")+
     `<tr class="tot"><td>Kokku</td><td>${T.t}</td><td>${T.t-T.p}</td><td>${T.p}</td><td>${T.d}</td><td>${T.m}</td></tr></table></div></section>`;
@@ -345,6 +356,7 @@ loadDeps();
 function refreshAll(){loadDeps();loadMenu(false);syncGet()}
 setInterval(refreshAll,60000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshAll()});
 document.addEventListener("click",e=>{
+  const ch=e.target.closest("[data-chip]");if(ch){CHIP=(CHIP===ch.dataset.chip)?null:ch.dataset.chip;render();return}
   const ln=e.target.closest("[data-mk]");if(ln){const k=ln.dataset.mk, was=!!MK[k];MK={};if(!was)MK[k]=1;SV("iru_mark",MK);document.querySelectorAll("[data-mk].mark").forEach(x=>x.classList.remove("mark"));if(!was)ln.classList.add("mark");return}   // korraga ainult üks punane rida: uue valimisel eelmine kaob
   const rs=e.target.closest("[data-reset]");if(rs){(async()=>{if(SYNC_URL&&!UNL){const ok=await askPin();if(!ok){alert("Muutmiseks on vaja PIN");return}}const b=rs.dataset.reset;[b,b+"|pu",b+"|g"].forEach(k=>{delete OVR[k];if(SH.ovr&&SH.ovr[k]!==undefined&&UNL&&PINV){delete SH.ovr[k];syncPost({action:"ovr",key:k,value:null})}});SV("iru_ovr",OVR);SV("iru_sh",SH);render()})();return}
   const v=e.target.closest("[data-v]");if(v){if(v.dataset.v==="s"&&!UNL){askPin().then(ok=>{if(ok){VIEW="s";render();scrollTo(0,0)}});return}VIEW=v.dataset.v;try{localStorage.setItem("iru_view",VIEW)}catch(_){}render();scrollTo(0,0);return}
