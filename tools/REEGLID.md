@@ -23,6 +23,7 @@ Allikas: toidulehed (X:\Statistika\Toidulehed_2026 UUS.xlsx) → osakonnad.json.
 
 ## Tükikaup, peenestatud juures kaal g
 - Tükikaubal on PORTSJON kaalus (nt kalapala 4 tk = 100 g). Põhikogus näidatakse kg-des (nt 30,8 kg), tükkide arv (1232 tk) on ainult INFOKS.
+- Õunakook 120 g (Aleksandr 25.11.2026; menüüs 1TK, kaal vaikimisi 120 g);
 - Lõhevorm 150 g; kalapala, sardell, pihv, kanapihv, toorvorst, viiner 100 g (kaste mitte)
 
 ## Piimavaba rida (osakonniti) ON
