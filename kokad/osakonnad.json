@@ -1,5 +1,5 @@
 {
- "updated": "25.11.2026 10:42",
+ "updated": "25.11.2026 10:46",
  "puhvet": 70,
  "puhvet_w": 46,
  "dates": {
@@ -35,7 +35,14 @@
    "me": 0,
    "v": 1,
    "jp": 1,
-   "vr": 1
+   "vr": 1,
+   "mt": "Üks püreeritud toit ei söö moosipallid, sajavoormid piimaga ja nj 1 topsijogurt | palun anda midagi asemel, nt joogurti.",
+   "ml": [
+    [
+     "Valgurikas lisapala (VR) (1)",
+     ""
+    ]
+   ]
   },
   {
    "n": "2A/1",
@@ -54,7 +61,14 @@
    "me": 0,
    "v": 0,
    "jp": 1,
-   "vr": 0
+   "vr": 0,
+   "mt": "",
+   "ml": [
+    [
+     "Täielik piimavaba (1)",
+     ""
+    ]
+   ]
   },
   {
    "n": "2A/2",
@@ -73,7 +87,9 @@
    "me": 0,
    "v": 0,
    "jp": 0,
-   "vr": 0
+   "vr": 0,
+   "mt": "",
+   "ml": []
   },
   {
    "n": "2A/3",
@@ -92,7 +108,14 @@
    "me": 0,
    "v": 0,
    "jp": 0,
-   "vr": 1
+   "vr": 1,
+   "mt": "",
+   "ml": [
+    [
+     "Valgurikas lisapala (VR) (1)",
+     ""
+    ]
+   ]
   },
   {
    "n": "2B",
@@ -111,7 +134,9 @@
    "me": 0,
    "v": 3,
    "jp": 3,
-   "vr": 0
+   "vr": 0,
+   "mt": "(dieet) tähendab mahe dieet?",
+   "ml": []
   },
   {
    "n": "2D",
@@ -130,7 +155,14 @@
    "me": 0,
    "v": 2,
    "jp": 2,
-   "vr": 0
+   "vr": 0,
+   "mt": "",
+   "ml": [
+    [
+     "Täielik piimavaba (3)",
+     "Eri dieedid.docx: 3*LV – ei tarbi isegi LV tooteid. täiesti piimavaba ja laktoosivaba"
+    ]
+   ]
   },
   {
    "n": "3A",
@@ -149,7 +181,9 @@
    "me": 0,
    "v": 2,
    "jp": 2,
-   "vr": 0
+   "vr": 0,
+   "mt": "LISA PEENESTATUD 20:00 jogut",
+   "ml": []
   },
   {
    "n": "3B",
@@ -168,7 +202,9 @@
    "me": 0,
    "v": 2,
    "jp": 3,
-   "vr": 0
+   "vr": 0,
+   "mt": "tatrapuder iga päev 1 ports",
+   "ml": []
   },
   {
    "n": "3C",
@@ -187,7 +223,14 @@
    "me": 0,
    "v": 5,
    "jp": 5,
-   "vr": 1
+   "vr": 1,
+   "mt": "2 muna soovib klient (diabeetik)",
+   "ml": [
+    [
+     "Valgurikas lisapala (VR) (1)",
+     ""
+    ]
+   ]
   },
   {
    "n": "3D",
@@ -206,7 +249,9 @@
    "me": 0,
    "v": 0,
    "jp": 0,
-   "vr": 0
+   "vr": 0,
+   "mt": "1manna/hirsi/ riisivaba | 1 lisapala kõhukinnisus | 1 inimene zond (gastrostoom, toitub iseseisvalt)",
+   "ml": []
   },
   {
    "n": "4A/1",
@@ -225,7 +270,14 @@
    "me": 0,
    "v": 0,
    "jp": 1,
-   "vr": 0
+   "vr": 0,
+   "mt": "1 l jogurt tabl. võtmiseks",
+   "ml": [
+    [
+     "Täielik piimavaba (2)",
+     "Eri dieedid.docx: 2*LV – ei tarbi isegi LV tooteid."
+    ]
+   ]
   },
   {
    "n": "4A/2",
@@ -244,7 +296,9 @@
    "me": 0,
    "v": 0,
    "jp": 1,
-   "vr": 0
+   "vr": 0,
+   "mt": "1 l jogurt tabla võtmiseks",
+   "ml": []
   },
   {
    "n": "4A/3",
@@ -263,7 +317,9 @@
    "me": 0,
    "v": 1,
    "jp": 2,
-   "vr": 0
+   "vr": 0,
+   "mt": "1 l jogurt tabla võtmiseks",
+   "ml": []
   },
   {
    "n": "Söökla",

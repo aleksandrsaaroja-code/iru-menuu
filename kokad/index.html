@@ -75,6 +75,12 @@ li.var .n{font-weight:500}
 .dtab td{padding:6px 4px;text-align:right;border-top:1px solid var(--line)}
 .dtab td.pu{font-weight:800;color:var(--accent)}
 .dtab tr[data-mk]{cursor:pointer}
+.ni{color:var(--accent);font-size:13px}
+.qd .nt{display:none;background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:6px 10px;margin:4px 0 6px;font-size:14px;font-weight:600}
+.qd .ln.mark + .nt{display:block}
+.dtab tr.nt{display:none}
+.dtab tr.nt td{text-align:left;background:var(--warn-bg);color:var(--warn);font-size:14px;font-weight:600;border-top:0;border-radius:8px}
+.dtab tr.mark + tr.nt{display:table-row}
 .dtab tr.mark td{background:rgba(214,40,40,.10);border-top:3px solid #d62828;border-bottom:3px solid #d62828}
 .dtab tr.mark td:first-child{border-left:3px solid #d62828;border-radius:8px 0 0 8px}
 .dtab tr.mark td:last-child{border-right:3px solid #d62828;border-radius:0 8px 8px 0}
@@ -97,6 +103,22 @@ let DATA=null;
 // Eridieetide osa on valmis, aga veel avaldamata (Aleksandr: „eridieetidega mõtleme veel“). Lülita true, kui otsustatud.
 const SHOW_ERIDIEEDID=false;      // sakk „Eridieedid“
 const SHOW_SUG_KISSELL=false;     // suhkruvaba rida kisselli juures
+const SHOW_TEKSTID=true;          // sakk „Märkused“ (toidulehe märkuste tekst, nimed maskeeritud)
+const SHOW_MARKUSED=true;        // eridieedi märkused osakonna rea juures (ⓘ; puudutades ilmub märkus)
+// Püsimärkused (inimeste arvu toidulehel ei ole) + toidulehelt tulevad arvud (täielik piimavaba, muu eridieet)
+// Märkused tulevad ainult toidulehelt (X:\Statistika\Toidulehed_2026 UUS.xlsx, LISAMÄRKED ja LISAPALAD): ajakohane info, ainult arvud
+function noteOf(n){if(!SHOW_MARKUSED)return[];const a=[];const d=(typeof DEPS!=="undefined"?DEPS:[]).find(x=>x.n===n);if(!d)return a;
+  if(d.tpv>0)a.push(`täielik piimavaba (ei tarbi ka laktoosivabu): ${d.tpv} in.`);
+  if(d.me>0)a.push(`muu eridieet (riisivaba, mannavaba jm): ${d.me} in.`);
+  if(d.gv>0)a.push(`gluteenivaba: ${d.gv} in.`);
+  if(d.pn>0)a.push(`puriinivaene: ${d.pn} in.`);
+  if(d.ved>0)a.push(`vedel / sond: ${d.ved} in.`);
+  if(d.tt>0)a.push(`taimetoit: ${d.tt} in.`);
+  if(d.vr>0)a.push(`valgurikas lisapala (VR): ${d.vr} in.`);
+  if(d.mt||(d.ml&&d.ml.some(x=>x[1])))a.push("toidulehel on märkus: vt sakk Märkused");
+  return a}
+const NI=n=>noteOf(n).length?' <span class="ni">ⓘ</span>':'';
+const NT=n=>{const a=noteOf(n);return a.length?`<div class="nt">${a.join("<br>")}</div>`:''};
 const DAYS=["Esmaspäev","Teisipäev","Kolmapäev","Neljapäev","Reede","Laupäev","Pühapäev"];
 const SHORT=["E","T","K","N","R","L","P"];
 const MONTHS=["jaanuar","veebruar","märts","aprill","mai","juuni","juuli","august","september","oktoober","november","detsember"];
@@ -139,8 +161,10 @@ function render(){
   if(VIEW==="s")h=sView();
   if(VIEW==="e"&&!SHOW_ERIDIEEDID)VIEW="q";
   if(VIEW==="e")h=`<h2 class="date">${DAYS[sel]}, ${dt.getUTCDate()}. ${MONTHS[dt.getUTCMonth()]}</h2>`+eView();
+  if(VIEW==="k"&&!SHOW_TEKSTID)VIEW="q";
+  if(VIEW==="k")h=`<h2 class="date">${DAYS[sel]}, ${dt.getUTCDate()}. ${MONTHS[dt.getUTCMonth()]}</h2>`+kView();
   if(VIEW==="t")h=`<h2 class="date">${DAYS[sel]}, ${dt.getUTCDate()}. ${MONTHS[dt.getUTCMonth()]}</h2>`+tView();
-  document.getElementById("nav").innerHTML=[["q","Kogused"],["m","Menüü"],["e","Eridieedid"],["t","Tops/Võileib"],["s","Seaded"]].filter(x=>x[0]!=="e"||SHOW_ERIDIEEDID).map(([k,n])=>`<button data-v="${k}" class="${VIEW===k?"on":""}">${n}</button>`).join("");
+  document.getElementById("nav").innerHTML=[["q","Kogused"],["m","Menüü"],["e","Eridieedid"],["t","Tops/Võileib"],["k","Märkused"],["s","Seaded"]].filter(x=>(x[0]!=="e"||SHOW_ERIDIEEDID)&&(x[0]!=="k"||SHOW_TEKSTID)).map(([k,n])=>`<button data-v="${k}" class="${VIEW===k?"on":""}">${n}</button>`).join("");
   document.getElementById("main").innerHTML=h;
 }
 document.getElementById("days").addEventListener("click",e=>{const b=e.target.closest(".day");if(b){sel=+b.dataset.i;render();scrollTo(0,0)}});
@@ -214,7 +238,7 @@ function qView(day){
   const PUX=DX.filter(x=>/^Puhvet/i.test(x.n)).reduce((a,x)=>a+x.t,0), SKX=DX.filter(x=>/^Söökla/i.test(x.n)).reduce((a,x)=>a+x.t,0);
   let h=(UNL&&SYNC_URL?`<div class="notes" style="margin:0 0 8px"><p>🔓 PIN sees: sinu muudatused lähevad kõikidele kokkadele.</p></div>`:"")+`<div class="chips"><div class="chip"><b>${T.t}</b><span>sööjat lõunal</span></div><div class="chip"><b>${T.p}</b><span>peenestatud</span></div><div class="chip"><b>${T.d}</b><span>suhkruvaba</span></div><div class="chip"><b>${T.m}</b><span>piimavaba</span></div></div>`;
   h+=`<section class="meal"><h3><span>OSAKONNITI</span></h3><div style="padding:4px 14px 8px"><table class="dtab"><tr><th>Üksus</th><th>Sööjaid</th><th>Tk</th><th>Peenest.</th><th>Suhkruv.</th><th>Piimav.</th></tr>`+
-    DX.filter(d=>d.t).map(d=>{const mk=CURD+"|T|"+d.n;return `<tr class="${MK[mk]?"mark":""}" data-mk="${esc(mk)}"><td>${esc(d.n)}</td><td>${d.t}</td><td><b>${d.t-d.p}</b></td><td class="pu">${d.p||"–"}</td><td>${d.d||"–"}</td><td>${d.m||"–"}</td></tr>`}).join("")+
+    DX.filter(d=>d.t).map(d=>{const mk=CURD+"|T|"+d.n;return `<tr class="${MK[mk]?"mark":""}" data-mk="${esc(mk)}"><td>${esc(d.n)}${NI(d.n)}</td><td>${d.t}</td><td><b>${d.t-d.p}</b></td><td class="pu">${d.p||"–"}</td><td>${d.d||"–"}</td><td>${d.m||"–"}</td></tr>`+(noteOf(d.n).length?`<tr class="nt"><td colspan="6">${noteOf(d.n).join("<br>")}</td></tr>`:"")}).join("")+
     `<tr class="tot"><td>Kokku</td><td>${T.t}</td><td>${T.t-T.p}</td><td>${T.p}</td><td>${T.d}</td><td>${T.m}</td></tr></table></div></section>`;
   const PU=DX.filter(x=>/^Puhvet/i.test(x.n)).reduce((a,x)=>a+x.t,0);
   h+=`<div class="notes" style="margin:0 0 10px"><p><b>Tk</b> = sööjaid − peenestatud (tükikaubale). Kokku ilma puhvetita: <b>${T.t-T.p-PU}</b>.</p></div>`;
@@ -264,11 +288,11 @@ function qView(day){
           deps.filter(x=>x[1]).map(x=>{const u=DX.find(d=>d.n===x[0])||{}, own=!(pure||dia||isPu(x[0]));
             const pp=(own&&!noPur&&!noSplit)?(u.p||0):0, ps=(own&&sug)?(u.d||0):0, pm0=(own&&dairy)?mvOf(u):0, pm=(ps&&pm0)?Math.max(0,pm0-(u.b||0)):pm0, main=x[1]-pp-pm-ps, w=wt(x[0]), f=n=>val?(PW?(n*PW/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg ("+(n*w)+" tk)":unit==="g"?(n*w/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg":fmtQ(n*w,unit)):"–";
             const mk=CURD+"|"+key+"|"+x[0], mc=MK[mk]?" mark":"";
-            if(!pp&&!pm&&!ps)return `<div class="ln${mc}" data-mk="${esc(mk)}"><span>${esc(x[0])} <span style="color:var(--mute)">(${x[1]})</span></span><b>${f(x[1])}</b></div>`;
-            return `<div class="ln${mc}" data-mk="${esc(mk)}" style="flex-wrap:wrap;gap:0 8px"><span>${esc(x[0])} <span style="color:var(--mute)">(${main})</span></span><span style="text-align:right"><b>${f(main)}</b>`+
+            if(!pp&&!pm&&!ps)return `<div class="ln${mc}" data-mk="${esc(mk)}"><span>${esc(x[0])}${NI(x[0])} <span style="color:var(--mute)">(${x[1]})</span></span><b>${f(x[1])}</b></div>`+NT(x[0]);
+            return `<div class="ln${mc}" data-mk="${esc(mk)}" style="flex-wrap:wrap;gap:0 8px"><span>${esc(x[0])}${NI(x[0])} <span style="color:var(--mute)">(${main})</span></span><span style="text-align:right"><b>${f(main)}</b>`+
               (pp?` <span style="color:var(--accent);white-space:nowrap">+ peenestatud (${pp}) ${f(pp)}</span>`:"")+
               (pm?` <span style="color:var(--warn);white-space:nowrap">+ piimavaba (${pm}) ${f(pm)}</span>`:"")+
-              (ps?` <span style="color:var(--sug);white-space:nowrap">+ suhkruvaba (${ps}) ${f(ps)}</span>`:"")+`</span></div>`}).join("")+`</div></details></li>`});
+              (ps?` <span style="color:var(--sug);white-space:nowrap">+ suhkruvaba (${ps}) ${f(ps)}</span>`:"")+`</span></div>`+NT(x[0])}).join("")+`</div></details></li>`});
     });
     h+=`</ul></section>`});
   return h+'<div class="notes"><p>Puuduta rida, et näha koguseid üksuste kaupa ja muuta portsjoni kaalu.</p></div>'}
@@ -280,6 +304,15 @@ function tView(){   // Tops/Võileib: uueneb statistikast (toidulehelt)
   let h=`<section class="meal"><h3><span>TOPS / VÕILEIB</span><em>20:00</em></h3><div style="padding:4px 14px 8px">`;
   h+=ins.length?`<table class="dtab"><tr><th>Üksus</th><th>Võileib (insuliin)</th><th>Tops (jogurt vms)</th></tr>`+ins.map(d=>{const mk=CURD+"|V|"+d.n;return `<tr class="${MK[mk]?"mark":""}" data-mk="${esc(mk)}"><td>${esc(d.n)}</td><td class="pu">${d.v||"–"}</td><td class="pu">${d.jp||"–"}</td></tr>`}).join("")+`<tr class="tot"><td>Kokku</td><td>${sum("v")}</td><td>${sum("jp")}</td></tr></table>`:`<div class="empty" style="padding:16px 0">Lisapalu ei ole</div>`;
   h+=`<p style="font-size:13px;color:var(--mute);margin:8px 0 2px">Uueneb toidulehtedelt: „Lisa võileib 20:00 (insuliin jms)“ ja „Lisa püreeritud 20:00 (jogurt vms)“.</p></div></section>`;
+  return h}
+function kView(){   // Märkused: toidulehe "Eri / märkused" tekst, nimed asendatud sõnaga "inimene" (skript maskeerib)
+  const has=d=>d.mt||(d.ml&&d.ml.length);
+  const U=DEPS.filter(has);
+  let h=`<section class="meal"><h3><span>MÄRKUSED TOIDULEHELT</span></h3><div style="padding:4px 14px 8px">`;
+  h+=U.length?U.map(d=>`<div style="padding:8px 0;border-bottom:1px solid var(--line)"><b>${esc(d.n)}</b>`+
+      (d.ml||[]).map(([l,t])=>`<div style="margin-top:3px"><span style="color:var(--accent);font-weight:600">${esc(l)}</span>${t?": "+esc(t):""}</div>`).join("")+
+      (d.mt?`<div style="margin-top:3px"><span style="color:var(--accent);font-weight:600">Eri / märkused</span>: ${esc(d.mt)}</div>`:"")+`</div>`).join(""):`<div class="empty" style="padding:16px 0">Märkusi ei ole</div>`;
+  h+=`<p style="font-size:13px;color:var(--mute);margin:8px 0 2px">Toidulehe LISAMÄRKED, LISAPALAD ja „Eri / märkused“. Nimed on automaatselt eemaldatud, inimeste arv on sildi juures sulgudes. Kui näed nime, anna teada.</p></div></section>`;
   return h}
 function eView(){
   const U=DEPS.filter(d=>!/^(Puhvet|Söökla)/i.test(d.n));
