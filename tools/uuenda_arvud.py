@@ -54,7 +54,27 @@ def collect_notes(ws):
             out.append([f"{lab} ({cnt})" if cnt else lab, txt])
     return out
 
-wb = openpyxl.load_workbook(src, data_only=True, read_only=False)
+import time
+LOGFILE = pathlib.Path(__file__).resolve().parent.parent / "arvud.log"   # *.log on .gitignore'is, jääb ainult sellesse arvutisse
+def log(msg):
+    try:
+        with open(LOGFILE, "a", encoding="utf-8") as f:
+            f.write(datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + " " + msg + "\n")
+    except Exception:
+        pass
+
+wb = None
+for attempt in range(1, 4):       # toiduleht võib olla salvestamisel pooleli või X-ketas hetkeks maas
+    try:
+        wb = openpyxl.load_workbook(src, data_only=True, read_only=False)
+        break
+    except Exception as e:
+        log(f"toidulehte ei saanud lugeda (katse {attempt}/3): {type(e).__name__}: {e}")
+        if attempt < 3:
+            time.sleep(10)
+if wb is None:
+    print("Toidulehte ei saanud lugeda, jätan vana osakonnad.json")
+    sys.exit(1)
 n = lambda ws, a: int(ws[a].value or 0) if isinstance(ws[a].value, (int, float)) else 0
 deps, sookla, dates, warn = [], 0, {}, []
 for u in UNITS:
@@ -95,9 +115,26 @@ if same:
 out.write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
 print("Kirjutatud", out, "· sööjaid kokku", sum(d["t"] for d in deps))
 for w in warn: print("HOIATUS:", w)
+log("osakonnad.json kirjutatud, sööjaid kokku " + str(sum(d["t"] for d in deps)))
 if "--push" in sys.argv:
-    d = out.parent.parent
-    subprocess.run(["git", "-C", str(d), "add", "kokad/osakonnad.json"], check=True)
-    if subprocess.run(["git", "-C", str(d), "diff", "--cached", "--quiet"]).returncode:
-        subprocess.run(["git", "-C", str(d), "commit", "-m", "Arvud uuendatud " + res["updated"]], check=True)
-        subprocess.run(["git", "-C", str(d), "push"], check=True)
+    d = str(out.parent.parent)
+    git = lambda *a: subprocess.run(["git", "-C", d, *a], capture_output=True, text=True)
+    git("add", "kokad/osakonnad.json")
+    if git("diff", "--cached", "--quiet").returncode:
+        c = git("commit", "-m", "Arvud uuendatud " + res["updated"])
+        if c.returncode:
+            log("commit ebaõnnestus: " + (c.stderr or c.stdout).strip()[:200]); sys.exit(1)
+        ok = False
+        for attempt in range(1, 4):   # push võib ebaõnnestuda, kui menüü avaldab samal ajal: tõmba ja proovi uuesti
+            p = git("push")
+            if p.returncode == 0:
+                ok = True; log(f"push õnnestus (katse {attempt})"); break
+            log(f"push ebaõnnestus (katse {attempt}/3): " + (p.stderr or p.stdout).strip()[:200].replace("\n", " "))
+            r = git("pull", "--rebase", "--autostash")
+            if r.returncode:
+                git("rebase", "--abort")
+                log("pull --rebase ebaõnnestus (konflikt?), katkestasin rebase'i: " + (r.stderr or r.stdout).strip()[:200].replace("\n", " "))
+                break
+            time.sleep(5)
+        if not ok:
+            print("PUSH EBAÕNNESTUS, vaata arvud.log"); sys.exit(1)
