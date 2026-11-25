@@ -23,10 +23,14 @@ for u in UNITS:
     pv = sum(g(r, c) for r in (6, 7, 8) for c in "DE") + g(8, "C") * 0
     pv = sum(g(r, c) for r in (6, 7, 8) for c in "DE")
     mv = sum(g(r, c) for r in (6, 7) for c in "DE")   # piimavaba, mitte-peenestatud
+    both = sum(g(r, "E") for r in (6, 7))              # suhkruvaba JA piimavaba (veerg E), mitte-peenestatud; on nii db kui mv sees
     osk, sk = g(20, "B"), g(21, "B")
     if sum(g(r, c) for r in (6, 7, 8) for c in "BCDE") != osk:
         warn.append(f"{u}: tabeli summa ei võrdu 'Osakonnas sööb' ({osk})")
-    deps.append({"n": u.replace("-", "/"), "t": osk + g(25, "B"), "p": pur, "m": pv, "mv": mv, "d": db, "h": g(25, "B")})
+    deps.append({"n": u.replace("-", "/"), "t": osk + g(25, "B"), "p": pur, "m": pv, "mv": mv, "d": db, "b": both, "h": g(25, "B"),
+                 # toidulehe LISAMÄRKED (ridu 12-17) ja LISAPALAD (ridu 28-30): ainult arvud, nimesid ei võeta
+                 "gv": g(12, "B"), "pn": g(13, "B"), "ved": g(14, "B"), "tpv": g(15, "B"), "tt": g(16, "B"), "me": g(17, "B"),
+                 "v": g(28, "B"), "jp": g(29, "B"), "vr": g(30, "B")})
     sookla += sk
     v = ws["E2"].value
     dates[u.replace("-", "/")] = v.strftime("%Y-%m-%d") if hasattr(v, "strftime") else None
