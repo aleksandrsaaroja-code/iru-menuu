@@ -62,7 +62,8 @@ li.var .n{font-weight:500}
 .qn small{display:block;font-weight:400;color:var(--mute);font-size:13px}
 .qt{font-size:22px;font-weight:800;white-space:nowrap;color:var(--accent);font-variant-numeric:tabular-nums}
 .qd{padding:0 0 12px;font-size:15px}
-.qd .ln{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed var(--line)}
+.qd .ln{display:flex;justify-content:space-between;padding:6px 8px;border-bottom:1px dashed var(--line);border-radius:8px;cursor:pointer}
+.qd .ln.mark{outline:3px solid #d62828;outline-offset:-2px;background:rgba(214,40,40,.10)}
 .qd label{display:flex;align-items:center;gap:8px;margin-bottom:8px;color:var(--mute);font-size:14px}
 .qd input{width:80px;text-align:right;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}
 .tag.pur{background:var(--chip);color:var(--accent)}
@@ -72,6 +73,10 @@ li.var .n{font-weight:500}
 .dtab th:first-child,.dtab td:first-child{text-align:left}
 .dtab td{padding:6px 4px;text-align:right;border-top:1px solid var(--line)}
 .dtab td.pu{font-weight:800;color:var(--accent)}
+.dtab tr[data-mk]{cursor:pointer}
+.dtab tr.mark td{background:rgba(214,40,40,.10);border-top:3px solid #d62828;border-bottom:3px solid #d62828}
+.dtab tr.mark td:first-child{border-left:3px solid #d62828;border-radius:8px 0 0 8px}
+.dtab tr.mark td:last-child{border-right:3px solid #d62828;border-radius:0 8px 8px 0}
 .dtab tr.tot td{font-weight:800;border-top:2px solid var(--line)}
 </style>
 </head>
@@ -166,6 +171,9 @@ const SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let DEPS=LS("iru_deps",[{"n": "1A", "t": 28, "p": 4, "m": 2, "d": 2}, {"n": "2A/1", "t": 16, "p": 10, "m": 1, "d": 3}, {"n": "2A/2", "t": 13, "p": 2, "m": 1, "d": 2}, {"n": "2A/3", "t": 14, "p": 0, "m": 1, "d": 3}, {"n": "2B", "t": 20, "p": 4, "m": 3, "d": 4}, {"n": "2D", "t": 19, "p": 2, "m": 2, "d": 3}, {"n": "3A", "t": 27, "p": 11, "m": 0, "d": 2}, {"n": "3B", "t": 39, "p": 13, "m": 8, "d": 10}, {"n": "3C", "t": 26, "p": 10, "m": 5, "d": 6}, {"n": "3D", "t": 37, "p": 3, "m": 4, "d": 9}, {"n": "4A/1", "t": 16, "p": 8, "m": 2, "d": 1}, {"n": "4A/2", "t": 22, "p": 2, "m": 1, "d": 2}, {"n": "4A/3", "t": 10, "p": 1, "m": 3, "d": 1}, {"n": "Söökla", "t": 22, "p": 0, "m": 0, "d": 0}, {"n": "Puhvet", "t": 70, "w": 46, "p": 0, "m": 0, "d": 0}]).map(x=>({d:0,...x}));      // [{n,t,p,m}]  nimi, kliente, peenestatud, piimavaba
 let CURD="";
 let OVR=LS("iru_ovr",{});        // toidu kaalu muudatused
+// Jagamisel märgitud osakonna read (punane kast): võti = kuupäev|toit|osa|üksus; ainult selles telefonis, vanemad kui 3 päeva kustuvad
+let MK=LS("iru_mark",{});
+(function(){const lim=new Date(Date.now()-3*864e5).toISOString().slice(0,10);let ch=false;Object.keys(MK).forEach(k=>{if(k.slice(0,10)<lim){delete MK[k];ch=true}});if(ch)SV("iru_mark",MK)})();
 
 // ---- Ühine salvestus (Google Apps Script): PIN-iga tehtud muudatused näevad kõik kokad ----
 const SYNC_URL="https://script.google.com/macros/s/AKfycbwgZ6GpOa0jsLnO7C_ajSYwJ-H_l6xHzMTrLUM2wqoM_quR4zAOOH0p0d8HX2fXhK2S/exec";   // pannakse siia pärast Google'i skripti avaldamist
@@ -198,10 +206,11 @@ function qView(day){
   const T=DX.reduce((a,d)=>({t:a.t+d.t,p:a.p+d.p,m:a.m+d.m,d:a.d+d.d}),{t:0,p:0,m:0,d:0});
   const PUX=DX.filter(x=>/^Puhvet/i.test(x.n)).reduce((a,x)=>a+x.t,0), SKX=DX.filter(x=>/^Söökla/i.test(x.n)).reduce((a,x)=>a+x.t,0);
   let h=(UNL&&SYNC_URL?`<div class="notes" style="margin:0 0 8px"><p>🔓 PIN sees: sinu muudatused lähevad kõikidele kokkadele.</p></div>`:"")+`<div class="chips"><div class="chip"><b>${T.t}</b><span>sööjat lõunal</span></div><div class="chip"><b>${T.p}</b><span>peenestatud</span></div><div class="chip"><b>${T.d}</b><span>suhkruvaba</span></div><div class="chip"><b>${T.m}</b><span>piimavaba</span></div></div>`;
-  h+=`<section class="meal"><h3><span>OSAKONNITI</span></h3><div style="padding:4px 14px 8px"><table class="dtab"><tr><th>Üksus</th><th>Sööjaid</th><th>Peenestatud</th><th>Suhkruvaba</th><th>Piimavaba</th></tr>`+
-    DX.filter(d=>d.t).map(d=>`<tr><td>${esc(d.n)}</td><td>${d.t}</td><td class="pu">${d.p||"–"}</td><td>${d.d||"–"}</td><td>${d.m||"–"}</td></tr>`).join("")+
-    `<tr class="tot"><td>Kokku</td><td>${T.t}</td><td>${T.p}</td><td>${T.d}</td><td>${T.m}</td></tr></table></div></section>`;
+  h+=`<section class="meal"><h3><span>OSAKONNITI</span></h3><div style="padding:4px 14px 8px"><table class="dtab"><tr><th>Üksus</th><th>Sööjaid</th><th>Tk</th><th>Peenest.</th><th>Suhkruv.</th><th>Piimav.</th></tr>`+
+    DX.filter(d=>d.t).map(d=>{const mk=CURD+"|T|"+d.n;return `<tr class="${MK[mk]?"mark":""}" data-mk="${esc(mk)}"><td>${esc(d.n)}</td><td>${d.t}</td><td><b>${d.t-d.p}</b></td><td class="pu">${d.p||"–"}</td><td>${d.d||"–"}</td><td>${d.m||"–"}</td></tr>`}).join("")+
+    `<tr class="tot"><td>Kokku</td><td>${T.t}</td><td>${T.t-T.p}</td><td>${T.p}</td><td>${T.d}</td><td>${T.m}</td></tr></table></div></section>`;
   const PU=DX.filter(x=>/^Puhvet/i.test(x.n)).reduce((a,x)=>a+x.t,0);
+  h+=`<div class="notes" style="margin:0 0 10px"><p><b>Tk</b> = sööjaid − peenestatud (tükikaubale). Kokku ilma puhvetita: <b>${T.t-T.p-PU}</b>.</p></div>`;
   if(PU)h+=`<div class="notes" style="margin:0 0 10px"><p>Puhvet (${PU}) on arvestatud ainult lõunal. Hommikul, õhtul ja ööoodel: <b>${T.t-PU}</b> sööjat.</p></div>`;
   if(DEPINFO)h+=`<div class="notes" style="margin:0 0 10px"><p>Arvud toidulehelt, uuendatud ${esc(DEPINFO.updated)}</p></div>`;
   day.s.forEach(s=>{
@@ -245,10 +254,11 @@ function qView(day){
           (puC?`<label>Puhveti portsjon <input data-k="${esc(key+"|pu")}" value="${esc(pRaw)}" inputmode="decimal"> ${unit}</label>`:"")+
           deps.filter(x=>x[1]).map(x=>{const u=DX.find(d=>d.n===x[0])||{}, own=!(pure||dia||isPu(x[0]));
             const pp=(own&&!noPur&&!noSplit)?(u.p||0):0, pm=(own&&dairy)?mvOf(u):0, main=x[1]-pp-pm, w=wt(x[0]), f=n=>val?(PW?(n*PW/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg ("+(n*w)+" tk)":unit==="g"?(n*w/1000).toLocaleString("et",{maximumFractionDigits:2})+" kg":fmtQ(n*w,unit)):"–";
-            if(!pp&&!pm)return `<div class="ln"><span>${esc(x[0])} <span style="color:var(--mute)">(${x[1]})</span></span><b>${f(x[1])}</b></div>`;
-            return `<div class="ln" style="flex-wrap:wrap;gap:0 8px"><span>${esc(x[0])} <span style="color:var(--mute)">(${main})</span></span><span style="text-align:right"><b>${f(main)}</b>`+
-              (pp?` <span style="color:var(--accent)">+ peenestatud (${pp}) ${f(pp)}</span>`:"")+
-              (pm?` <span style="color:var(--warn)">+ piimavaba (${pm}) ${f(pm)}</span>`:"")+`</span></div>`}).join("")+`</div></details></li>`});
+            const mk=CURD+"|"+key+"|"+x[0], mc=MK[mk]?" mark":"";
+            if(!pp&&!pm)return `<div class="ln${mc}" data-mk="${esc(mk)}"><span>${esc(x[0])} <span style="color:var(--mute)">(${x[1]})</span></span><b>${f(x[1])}</b></div>`;
+            return `<div class="ln${mc}" data-mk="${esc(mk)}" style="flex-wrap:wrap;gap:0 8px"><span>${esc(x[0])} <span style="color:var(--mute)">(${main})</span></span><span style="text-align:right"><b>${f(main)}</b>`+
+              (pp?` <span style="color:var(--accent);white-space:nowrap">+ peenestatud (${pp}) ${f(pp)}</span>`:"")+
+              (pm?` <span style="color:var(--warn);white-space:nowrap">+ piimavaba (${pm}) ${f(pm)}</span>`:"")+`</span></div>`}).join("")+`</div></details></li>`});
     });
     h+=`</ul></section>`});
   return h+'<div class="notes"><p>Puuduta rida, et näha koguseid üksuste kaupa ja muuta portsjoni kaalu.</p></div>'}
@@ -272,6 +282,7 @@ loadDeps();
 function refreshAll(){loadDeps();loadMenu(false);syncGet()}
 setInterval(refreshAll,60000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshAll()});
 document.addEventListener("click",e=>{
+  const ln=e.target.closest("[data-mk]");if(ln){const k=ln.dataset.mk, was=!!MK[k];MK={};if(!was)MK[k]=1;SV("iru_mark",MK);document.querySelectorAll("[data-mk].mark").forEach(x=>x.classList.remove("mark"));if(!was)ln.classList.add("mark");return}   // korraga ainult üks punane rida: uue valimisel eelmine kaob
   const rs=e.target.closest("[data-reset]");if(rs){(async()=>{if(SYNC_URL&&!UNL){const ok=await askPin();if(!ok){alert("Muutmiseks on vaja PIN");return}}const b=rs.dataset.reset;[b,b+"|pu",b+"|g"].forEach(k=>{delete OVR[k];if(SH.ovr&&SH.ovr[k]!==undefined&&UNL&&PINV){delete SH.ovr[k];syncPost({action:"ovr",key:k,value:null})}});SV("iru_ovr",OVR);SV("iru_sh",SH);render()})();return}
   const v=e.target.closest("[data-v]");if(v){if(v.dataset.v==="s"&&!UNL){askPin().then(ok=>{if(ok){VIEW="s";render();scrollTo(0,0)}});return}VIEW=v.dataset.v;try{localStorage.setItem("iru_view",VIEW)}catch(_){}render();scrollTo(0,0);return}
   if(e.target.id==="addd"){DEPS.push({n:"Üksus "+(DEPS.length+1),t:0,p:0,m:0,d:0});SV("iru_deps",DEPS);pushDeps();render();return}
