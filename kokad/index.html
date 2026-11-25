@@ -105,7 +105,8 @@ let DATA=null;
 // Eridieetide osa on valmis, aga veel avaldamata (Aleksandr: „eridieetidega mõtleme veel“). Lülita true, kui otsustatud.
 const SHOW_ERIDIEEDID=false;      // sakk „Eridieedid“
 const SHOW_SUG_KISSELL=false;     // suhkruvaba rida kisselli juures
-const SHOW_TEKSTID=true;          // sakk „Märkused“ (toidulehe märkuste tekst, nimed maskeeritud)
+const SHOW_SEADED=false;          // sakk „Seaded“ (osakondade arvud käsitsi): arvud tulevad toidulehelt, käsitsi muutmine pole vajalik
+const SHOW_TEKSTID=true;         // sakk „Märkused“ (toidulehe märkuste tekst, nimed maskeeritud)
 const SHOW_MARKUSED=true;        // eridieedi märkused osakonna rea juures (ⓘ; puudutades ilmub märkus)
 // Püsimärkused (inimeste arvu toidulehel ei ole) + toidulehelt tulevad arvud (täielik piimavaba, muu eridieet)
 // Märkused tulevad ainult toidulehelt (X:\Statistika\Toidulehed_2026 UUS.xlsx, LISAMÄRKED ja LISAPALAD): ajakohane info, ainult arvud
@@ -159,14 +160,14 @@ function render(){
   if(day.n&&day.n.length)h+=`<div class="notes">${day.n.map(x=>`<p>${esc(x)}</p>`).join("")}</div>`;
   CURD=dt.toISOString().slice(0,10);
   if(VIEW==="q")h=`<h2 class="date">${DAYS[sel]}, ${dt.getUTCDate()}. ${MONTHS[dt.getUTCMonth()]}</h2>`+qView(day);
-  if(VIEW==="s"&&!UNL)VIEW="q";
+  if(VIEW==="s"&&(!UNL||!SHOW_SEADED))VIEW="q";
   if(VIEW==="s")h=sView();
   if(VIEW==="e"&&!SHOW_ERIDIEEDID)VIEW="q";
   if(VIEW==="e")h=`<h2 class="date">${DAYS[sel]}, ${dt.getUTCDate()}. ${MONTHS[dt.getUTCMonth()]}</h2>`+eView();
   if(VIEW==="k"&&!SHOW_TEKSTID)VIEW="q";
   if(VIEW==="k")h=`<h2 class="date">${DAYS[sel]}, ${dt.getUTCDate()}. ${MONTHS[dt.getUTCMonth()]}</h2>`+kView();
   if(VIEW==="t")h=`<h2 class="date">${DAYS[sel]}, ${dt.getUTCDate()}. ${MONTHS[dt.getUTCMonth()]}</h2>`+tView();
-  document.getElementById("nav").innerHTML=[["q","Kogused"],["m","Menüü"],["e","Eridieedid"],["t","Tops/Võileib"],["k","Märkused"],["s","Seaded"]].filter(x=>(x[0]!=="e"||SHOW_ERIDIEEDID)&&(x[0]!=="k"||SHOW_TEKSTID)).map(([k,n])=>`<button data-v="${k}" class="${VIEW===k?"on":""}">${n}</button>`).join("");
+  document.getElementById("nav").innerHTML=[["q","Kogused"],["m","Menüü"],["e","Eridieedid"],["t","Tops/Võileib"],["k","Märkused"],["s","Seaded"]].filter(x=>(x[0]!=="e"||SHOW_ERIDIEEDID)&&(x[0]!=="k"||SHOW_TEKSTID)&&(x[0]!=="s"||SHOW_SEADED)).map(([k,n])=>`<button data-v="${k}" class="${VIEW===k?"on":""}">${n}</button>`).join("");
   document.getElementById("main").innerHTML=h;
 }
 document.getElementById("days").addEventListener("click",e=>{const b=e.target.closest(".day");if(b){sel=+b.dataset.i;render();scrollTo(0,0)}});
@@ -255,6 +256,8 @@ function qView(day){
   h+=`<div class="notes" style="margin:0 0 10px"><p><b>Tk</b> = sööjaid − peenestatud (tükikaubale). Kokku ilma puhvetita: <b>${T.t-T.p-PU}</b>.</p></div>`;
   if(PU)h+=`<div class="notes" style="margin:0 0 10px"><p>Puhvet (${PU}) on arvestatud ainult lõunal. Hommikul, õhtul ja ööoodel: <b>${T.t-PU}</b> sööjat.</p></div>`;
   if(DEPINFO)h+=`<div class="notes" style="margin:0 0 10px"><p>Arvud toidulehelt, uuendatud ${esc(DEPINFO.updated)}</p></div>`;
+  if(DEPINFO&&DEPINFO.dates){const old=Object.entries(DEPINFO.dates).filter(([k,v])=>v&&(Date.now()-Date.parse(v))>7*864e5).map(([k,v])=>`${esc(k)} (${v.slice(8,10)}.${v.slice(5,7)}.)`);   // toidulehe kuupäev üle 7 päeva vana: arv võib olla aegunud
+    if(old.length)h+=`<div class="warnbox">⚠ Toidulehe kuupäev on üle 7 päeva vana: ${old.join(", ")}. Arv võib olla aegunud.</div>`}
   day.s.forEach(s=>{
     const lunch=/^LÕUNA/i.test(s.t);
     const puN=DX.filter(x=>/^Puhvet/i.test(x.n)).reduce((a,x)=>a+x.t,0), clN=DX.reduce((a,x)=>a+x.t,0)-puN;
