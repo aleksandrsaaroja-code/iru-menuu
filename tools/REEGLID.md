@@ -40,3 +40,4 @@ Allikas: toidulehed (X:\Statistika\Toidulehed_2026 UUS.xlsx) → osakonnad.json.
 - Ühine salvestus (Google Apps Script, tools/google-skript.gs): PIN-iga (Seaded avatud) tehtud muudatused (osakondade arvud ja portsjonid/kaalud) näevad kõik kokad; kokad ei saa kirjutada. Käsitsi arvud kehtivad, kuni toidulehe andmed päriselt muutuvad. Sünkroon SYNC_URL on kokad/index.html alguses.
 
 - Toidulehe tekstuuritabeli „märkus“ veerust (G6–G8) näidatakse äpis ainult toidu juhiseid (nt „lisandina keefir“), ilma sildita „Üldtoit/Püreeritud“. Dieedi kirjeldusi (PV, DB, laktoos, diabeet, …vaba), söötmist, sondi ega „Sööklas“ märkust ei näidata (Aleksandr 26.11.2026). Punane märgistus on välja lülitatud (SHOW_NEW_RED=false, 26.11.2026).
+- Tarretis (nt KEEFIRITARRETIS, PUUVILJATARRETIS) on menüüs tükina (1TK), aga tüki kaal on 150 g – äpis infoks (Aleksandr 26.11.2026).
