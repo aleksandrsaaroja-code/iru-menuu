@@ -111,9 +111,13 @@ const SHOW_TEKSTID=true;         // sakk „Märkused“ (toidulehe märkuste te
 const SHOW_MARKUSED=true;        // eridieedi märkused osakonna rea juures (ⓘ; puudutades ilmub märkus)
 // Püsimärkused (inimeste arvu toidulehel ei ole) + toidulehelt tulevad arvud (täielik piimavaba, muu eridieet)
 // Märkused tulevad ainult toidulehelt (X:\Statistika\Toidulehed_2026 UUS.xlsx, LISAMÄRKED ja LISAPALAD): ajakohane info, ainult arvud
+// UUED märkused (toidulehe "märkus" veerg G6-G8, ml-rea 3. väli =1) näidatakse ajutiselt punasega; hiljem: SHOW_NEW_RED=false
+const SHOW_NEW_RED=true;
+const NEWL={has:(l,x)=>SHOW_NEW_RED&&x===1};
+const NEWC="#e5484d";
 function noteOf(n){if(!SHOW_MARKUSED)return[];const a=[];const d=(typeof DEPS!=="undefined"?DEPS:[]).find(x=>x.n===n);if(!d)return a;
   if(d.ml!==undefined||d.mt!==undefined){   // näita sama teksti, mis sakis Eridieedid (lisamärked, VR, "Eri / märkused")
-    (d.ml||[]).forEach(([l,t])=>a.push(esc(l)+(t?": "+esc(t):"")));
+    (d.ml||[]).forEach(([l,t,x])=>{const s=esc(l)+(t?": "+esc(t):"");a.push(NEWL.has(l,x)?`<span style="color:${NEWC};font-weight:600">${s}</span>`:s)});
     if(d.mt)a.push("Eri / märkused: "+esc(d.mt));
     return a}
   if(d.tpv>0)a.push(`täielik piimavaba (ei tarbi ka laktoosivabu): ${d.tpv} in.`);
@@ -327,7 +331,7 @@ function kView(){   // Märkused: toidulehe "Eri / märkused" tekst, nimed asend
   const U=DEPS.filter(has);
   let h=`<section class="meal"><h3><span>ERIDIEEDID TOIDULEHELT</span></h3><div style="padding:4px 14px 8px">`;
   h+=U.length?U.map(d=>`<div style="padding:8px 0;border-bottom:1px solid var(--line)"><b>${esc(d.n)}</b>`+
-      (d.ml||[]).map(([l,t])=>`<div style="margin-top:3px"><span style="color:var(--accent);font-weight:600">${esc(l)}</span>${t?": "+esc(t):""}</div>`).join("")+
+      (d.ml||[]).map(([l,t,x])=>NEWL.has(l,x)?`<div style="margin-top:3px;color:${NEWC};font-weight:600">${esc(l)}${t?": "+esc(t):""}</div>`:`<div style="margin-top:3px"><span style="color:var(--accent);font-weight:600">${esc(l)}</span>${t?": "+esc(t):""}</div>`).join("")+
       (d.mt?`<div style="margin-top:3px"><span style="color:var(--accent);font-weight:600">Eri / märkused</span>: ${esc(d.mt)}</div>`:"")+`</div>`).join(""):`<div class="empty" style="padding:16px 0">Märkusi ei ole</div>`;
   h+=`<p style="font-size:13px;color:var(--mute);margin:8px 0 2px">Toidulehe LISAMÄRKED, LISAPALAD ja „Eri / märkused“. Nimed on automaatselt eemaldatud, inimeste arv on sildi juures sulgudes. Kui näed nime, anna teada.</p></div></section>`;
   return h}

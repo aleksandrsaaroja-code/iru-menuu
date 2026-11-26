@@ -52,7 +52,39 @@ def collect_notes(ws):
                          if isinstance(ws[f"{c}{r}"].value, str) and ws[f"{c}{r}"].value.strip())
         if cnt or txt:
             out.append([f"{lab} ({cnt})" if cnt else lab, txt])
+    # tekstuuritabeli "märkus" veerg (G6-G8): AINULT toidu juhised (mida anda), ilma sildita (Aleksandr 26.11.2026).
+    # Dieedi kirjeldusi (PV/DB, laktoos, diabeet, ...vaba), söötmist, sondi ja "Sööklas" (C21) ei näidata.
+    for cell in ("G6", "G7", "G8"):
+        for seg in clean_note(ws[cell].value).split(" | "):
+            if seg and _FOOD.search(seg) and not _DIET.search(seg):
+                out.append([seg, "", 1])        # 3. väli 1 = uus märkus (äpis ajutiselt punane)
     return out
+
+_FOOD = re.compile(r"lisand|asemel|\banda\b|antakse|keefir|jogu?urt|joogurt|kohuke|\bmuna|mahl|kissell|\bpiim(?!avaba)|puder|pudru|supp|tatar|leib|sai\b|võileib", re.I)
+_DIET = re.compile(r"\[(?:DB|PV)|piimavaba|laktoos|diabee|\w+vaba\b|sööda|gastrostoom|sond", re.I)
+
+_TAG = re.compile(r"\[?\(?\b(?:DB\s*\+\s*PV|DB|PV)\b\)?\]?\s*:?", re.I)
+def clean_note(v):
+    """Märkuse tekst ilma nimede, initsiaalide ja tühjade DB/PV siltideta."""
+    if not isinstance(v, str) or not v.strip():
+        return ""
+    segs = []
+    for s in mask_names(v).split("|"):
+        s = re.sub(r"(?<![A-Za-zÕÄÖÜŠŽõäöüšž])[A-ZÕÄÖÜŠŽ](?![A-Za-zÕÄÖÜŠŽõäöüšž+])", "", s)   # üksikud initsiaalid
+        s = re.sub(r"\bja\b(?=\s*[,|]|\s*$)", "", s)                                            # "ja" ilma nimeta
+        s = re.sub(r"\(?\bDIAB\b\)?\s*:?", "", s)                                               # "DIAB" = sama mis [DB]
+        s = re.sub(r"\(\s*\)", "", s)
+        rest = _TAG.sub("", s)
+        rest = re.sub(r"[\s,/;\-:()]+", " ", rest).strip()
+        if not rest:
+            continue
+        s = re.sub(r"\s*,\s*(?:[,\-]\s*)*", ", ", s)
+        s = re.sub(r"^\s*,\s*", "", s); s = re.sub(r"\]\s*,\s*", "] ", s)
+        s = re.sub(r"^\s*\(([^()]*)\)\s*$", r"\1", s)                                          # terve tekst sulgudes
+        s = re.sub(r"^[\s,/;\-]+|[\s,/;\-]+$", "", s)
+        s = re.sub(r"\[\s*", "[", s); s = re.sub(r"\s+", " ", s).strip(" ,")
+        segs.append(s)
+    return " | ".join(segs)
 
 import time
 LOGFILE = pathlib.Path(__file__).resolve().parent.parent / "arvud.log"   # *.log on .gitignore'is, jääb ainult sellesse arvutisse
