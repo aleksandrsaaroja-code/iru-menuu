@@ -112,7 +112,7 @@ const SHOW_MARKUSED=true;        // eridieedi märkused osakonna rea juures (ⓘ
 // Püsimärkused (inimeste arvu toidulehel ei ole) + toidulehelt tulevad arvud (täielik piimavaba, muu eridieet)
 // Märkused tulevad ainult toidulehelt (X:\Statistika\Toidulehed_2026 UUS.xlsx, LISAMÄRKED ja LISAPALAD): ajakohane info, ainult arvud
 // UUED märkused (toidulehe "märkus" veerg G6-G8, ml-rea 3. väli =1) näidatakse ajutiselt punasega; hiljem: SHOW_NEW_RED=false
-const SHOW_NEW_RED=true;
+const SHOW_NEW_RED=false;
 const NEWL={has:(l,x)=>SHOW_NEW_RED&&x===1};
 const NEWC="#e5484d";
 function noteOf(n){if(!SHOW_MARKUSED)return[];const a=[];const d=(typeof DEPS!=="undefined"?DEPS:[]).find(x=>x.n===n);if(!d)return a;
