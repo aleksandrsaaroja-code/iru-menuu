@@ -137,7 +137,10 @@ const MONTHS=["jaanuar","veebruar","märts","aprill","mai","juuni","juuli","augu
 // Tsükkel: nädal alates 05.10.2026 = Nädal 2
 const ANCHOR=Date.UTC(2026,9,5);
 const mondayOf=d=>{const x=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));x.setUTCDate(x.getUTCDate()-((x.getUTCDay()+6)%7));return x};
-const weekNo=m=>{const w=Math.round((m-ANCHOR)/(7*864e5));return (((1+w)%5)+5)%5+1};
+// Tsükli nihe (Aleksandr 26.11.2026): nädal alates 30.11.2026 = Nädal 1 (Nädal 5 jäi vahele); varasemad nädalad vana tsükli järgi
+const ANCHOR2=Date.UTC(2026,10,30);
+const weekNo=m=>{if(m>=ANCHOR2){const w=Math.round((m-ANCHOR2)/(7*864e5));return ((w%5)+5)%5+1}
+  const w=Math.round((m-ANCHOR)/(7*864e5));return (((1+w)%5)+5)%5+1};
 const fmt=d=>d.getUTCDate()+"."+String(d.getUTCMonth()+1).padStart(2,"0")+"."+d.getUTCFullYear();
 const now=new Date();
 const todayUTC=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());

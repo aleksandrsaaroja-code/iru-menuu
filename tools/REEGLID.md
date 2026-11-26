@@ -41,3 +41,4 @@ Allikas: toidulehed (X:\Statistika\Toidulehed_2026 UUS.xlsx) → osakonnad.json.
 
 - Toidulehe tekstuuritabeli „märkus“ veerust (G6–G8) näidatakse äpis ainult toidu juhiseid (nt „lisandina keefir“), ilma sildita „Üldtoit/Püreeritud“. Dieedi kirjeldusi (PV, DB, laktoos, diabeet, …vaba), söötmist, sondi ega „Sööklas“ märkust ei näidata (Aleksandr 26.11.2026). Punane märgistus on välja lülitatud (SHOW_NEW_RED=false, 26.11.2026).
 - Tarretis (nt KEEFIRITARRETIS, PUUVILJATARRETIS) on menüüs tükina (1TK), aga tüki kaal on 150 g – äpis infoks (Aleksandr 26.11.2026).
+- Nädalate tsükkel nihutati: 30.11.2026 = Nädal 1 (Nädal 5 jäi vahele), edasi 07.12 = 2 jne. Varasemad nädalad vana tsükli järgi (23.11 = 4). (Aleksandr 26.11.2026)
