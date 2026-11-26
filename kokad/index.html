@@ -112,6 +112,10 @@ const SHOW_MARKUSED=true;        // eridieedi märkused osakonna rea juures (ⓘ
 // Püsimärkused (inimeste arvu toidulehel ei ole) + toidulehelt tulevad arvud (täielik piimavaba, muu eridieet)
 // Märkused tulevad ainult toidulehelt (X:\Statistika\Toidulehed_2026 UUS.xlsx, LISAMÄRKED ja LISAPALAD): ajakohane info, ainult arvud
 function noteOf(n){if(!SHOW_MARKUSED)return[];const a=[];const d=(typeof DEPS!=="undefined"?DEPS:[]).find(x=>x.n===n);if(!d)return a;
+  if(d.ml!==undefined||d.mt!==undefined){   // näita sama teksti, mis sakis Eridieedid (lisamärked, VR, "Eri / märkused")
+    (d.ml||[]).forEach(([l,t])=>a.push(esc(l)+(t?": "+esc(t):"")));
+    if(d.mt)a.push("Eri / märkused: "+esc(d.mt));
+    return a}
   if(d.tpv>0)a.push(`täielik piimavaba (ei tarbi ka laktoosivabu): ${d.tpv} in.`);
   if(d.me>0)a.push(`muu eridieet (riisivaba, mannavaba jm): ${d.me} in.`);
   if(d.gv>0)a.push(`gluteenivaba: ${d.gv} in.`);
