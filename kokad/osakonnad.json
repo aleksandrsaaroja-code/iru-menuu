@@ -1,5 +1,5 @@
 {
- "updated": "27.11.2026 06:20",
+ "updated": "27.11.2026 06:27",
  "puhvet": 70,
  "puhvet_w": 46,
  "dates": {
@@ -62,7 +62,7 @@
    "v": 0,
    "jp": 1,
    "vr": 0,
-   "mt": "",
+   "mt": "1 keefir",
    "ml": [
     [
      "Täielik piimavaba (1)",
@@ -161,7 +161,7 @@
    "v": 2,
    "jp": 2,
    "vr": 0,
-   "mt": "",
+   "mt": "3x isegi mitte LV tooted täiesti piimavaba",
    "ml": [
     [
      "Täielik piimavaba (3)",
@@ -185,9 +185,9 @@
    "tt": 0,
    "me": 0,
    "v": 2,
-   "jp": 2,
+   "jp": 3,
    "vr": 0,
-   "mt": "LISA PEENESTATUD 20:00 jogut",
+   "mt": "",
    "ml": []
   },
   {
@@ -255,7 +255,7 @@
    "v": 0,
    "jp": 0,
    "vr": 0,
-   "mt": "1manna/hirsi/ riisivaba | 1 lisapala kõhukinnisus | 1 inimene zond (gastrostoom, toitub iseseisvalt)",
+   "mt": "1x manna/hirsi/ riisivaba | 1 lisapala kõhukinnisus | 1 inimene zond (gastrostoom, toitub iseseisvalt)",
    "ml": []
   },
   {
