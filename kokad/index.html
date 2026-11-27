@@ -108,7 +108,8 @@ const SHOW_ERIDIEEDID=false;      // sakk „Eridieedid“
 const SHOW_SUG_KISSELL=true;    // suhkruvaba rida kisselli juures
 const SHOW_SEADED=false;          // sakk „Seaded“ (osakondade arvud käsitsi): arvud tulevad toidulehelt, käsitsi muutmine pole vajalik
 const SHOW_TEKSTID=true;         // sakk „Märkused“ (toidulehe märkuste tekst, nimed maskeeritud)
-const SHOW_MARKUSED=true;        // eridieedi märkused osakonna rea juures (ⓘ; puudutades ilmub märkus)
+const SHOW_MARKUSED=true;
+const SHOW_ML=false;            // Aleksandr 27.11.2026: eridieedid ainult toidulehe reast "Eri / märkused" (rida 31); lisamärked, VR ja märkuste veerg ei näidata        // eridieedi märkused osakonna rea juures (ⓘ; puudutades ilmub märkus)
 // Püsimärkused (inimeste arvu toidulehel ei ole) + toidulehelt tulevad arvud (täielik piimavaba, muu eridieet)
 // Märkused tulevad ainult toidulehelt (X:\Statistika\Toidulehed_2026 UUS.xlsx, LISAMÄRKED ja LISAPALAD): ajakohane info, ainult arvud
 // UUED märkused (toidulehe "märkus" veerg G6-G8, ml-rea 3. väli =1) näidatakse ajutiselt punasega; hiljem: SHOW_NEW_RED=false
@@ -117,7 +118,7 @@ const NEWL={has:(l,x)=>SHOW_NEW_RED&&x===1};
 const NEWC="#e5484d";
 function noteOf(n){if(!SHOW_MARKUSED)return[];const a=[];const d=(typeof DEPS!=="undefined"?DEPS:[]).find(x=>x.n===n);if(!d)return a;
   if(d.ml!==undefined||d.mt!==undefined){   // näita sama teksti, mis sakis Eridieedid (lisamärked, VR, "Eri / märkused")
-    (d.ml||[]).forEach(([l,t,x])=>{const s=esc(l)+(t?": "+esc(t):"");a.push(NEWL.has(l,x)?`<span style="color:${NEWC};font-weight:600">${s}</span>`:s)});
+    (SHOW_ML?d.ml||[]:[]).forEach(([l,t,x])=>{const s=esc(l)+(t?": "+esc(t):"");a.push(NEWL.has(l,x)?`<span style="color:${NEWC};font-weight:600">${s}</span>`:s)});
     if(d.mt)a.push("Eri / märkused: "+esc(d.mt));
     return a}
   if(d.tpv>0)a.push(`täielik piimavaba (ei tarbi ka laktoosivabu): ${d.tpv} in.`);
@@ -330,13 +331,13 @@ function tView(){   // Tops/Võileib: uueneb statistikast (toidulehelt)
   h+=`<p style="font-size:13px;color:var(--mute);margin:8px 0 2px">Uueneb toidulehtedelt: „Lisa võileib 20:00 (insuliin jms)“ ja „Lisa püreeritud 20:00 (jogurt vms)“.</p></div></section>`;
   return h}
 function kView(){   // Märkused: toidulehe "Eri / märkused" tekst, nimed asendatud sõnaga "inimene" (skript maskeerib)
-  const has=d=>d.mt||(d.ml&&d.ml.length);
+  const has=d=>d.mt||(SHOW_ML&&d.ml&&d.ml.length);
   const U=DEPS.filter(has);
   let h=`<section class="meal"><h3><span>ERIDIEEDID TOIDULEHELT</span></h3><div style="padding:4px 14px 8px">`;
   h+=U.length?U.map(d=>`<div style="padding:8px 0;border-bottom:1px solid var(--line)"><b>${esc(d.n)}</b>`+
-      (d.ml||[]).map(([l,t,x])=>NEWL.has(l,x)?`<div style="margin-top:3px;color:${NEWC};font-weight:600">${esc(l)}${t?": "+esc(t):""}</div>`:`<div style="margin-top:3px"><span style="color:var(--accent);font-weight:600">${esc(l)}</span>${t?": "+esc(t):""}</div>`).join("")+
+      (SHOW_ML?d.ml||[]:[]).map(([l,t,x])=>NEWL.has(l,x)?`<div style="margin-top:3px;color:${NEWC};font-weight:600">${esc(l)}${t?": "+esc(t):""}</div>`:`<div style="margin-top:3px"><span style="color:var(--accent);font-weight:600">${esc(l)}</span>${t?": "+esc(t):""}</div>`).join("")+
       (d.mt?`<div style="margin-top:3px"><span style="color:var(--accent);font-weight:600">Eri / märkused</span>: ${esc(d.mt)}</div>`:"")+`</div>`).join(""):`<div class="empty" style="padding:16px 0">Märkusi ei ole</div>`;
-  h+=`<p style="font-size:13px;color:var(--mute);margin:8px 0 2px">Toidulehe LISAMÄRKED, LISAPALAD ja „Eri / märkused“. Nimed on automaatselt eemaldatud, inimeste arv on sildi juures sulgudes. Kui näed nime, anna teada.</p></div></section>`;
+  h+=`<p style="font-size:13px;color:var(--mute);margin:8px 0 2px">${SHOW_ML?"Toidulehe LISAMÄRKED, LISAPALAD ja „Eri / märkused“.":"Toidulehe rida „Eri / märkused“."} Nimed on automaatselt eemaldatud. Kui näed nime, anna teada.</p></div></section>`;
   return h}
 function eView(){
   const U=DEPS.filter(d=>!/^(Puhvet|Söökla)/i.test(d.n));
